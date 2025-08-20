@@ -1,0 +1,11 @@
+< en 
+ROUND	Round your result to `r ROUND` decimal places
+?1	Round your result to one decimal place
+?0	Round your result to an integer
+CHOICE  One or more answers may be correct. It is sufficient to give one correct answer. If you give several answers and one is incorrect, then the task has been answered incorrectly
+
+< de
+ROUND	Runden Sie Ihr Ergebnis auf `r ROUND`  Nachkommastellen
+?1	Runden Sie Ihr Ergebnis auf eine Nachkommastelle
+?0  Runden Sie Ihr Ergebnis auf eine ganze Zahl
+CHOICE  Es kann eine oder mehrere Antworten richtig sein. Es ist ausreichend, eine richtige Antwort anzugeben. Geben Sie mehrere Antworten an und eine ist falsch, dann ist die Aufgabe falsch beantwortet

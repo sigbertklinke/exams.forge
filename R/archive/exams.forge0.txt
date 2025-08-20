@@ -1,0 +1,3634 @@
+---
+title: "exams.forge"
+author: "Sigbert Klinke, Kleio Chrysopoulou Tseva"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    extra_dependencies: ["environ"]
+    includes:
+      in_header: preamble.tex
+    toc: yes
+  rmarkdown::html_vignette:
+    toc: true
+  html_document:
+    toc: yes
+vignette: >
+  %\VignetteIndexEntry{exams.forge}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(exams.forge)
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, echo=FALSE}
+suppressPackageStartupMessages({
+library("extraDistr")
+library("exams")
+library("exams.forge")
+})
+```
+
+# Introduction
+
+When devising exercises for students, two primary challenges emerge. Firstly, not all
+datasets prove suitable; students' tendencies to round intermediate results can lead
+to differing yet accurate solutions. Secondly, the lack of access to these
+intermediate values may hinder solution explanation. This can be addressed by 
+expanding existing routines.
+
+The former problem arises mainly when students are prohibited from using computers
+for exercises. Genuine comprehension of statistical coefficients or
+graphical representations is best achieved through manual calculation —an approach
+similar to memorizing multiplication tables. Without this hands-on engagement,
+students risk becoming mere button-pushers without deeper understanding.
+
+To tackle these challenges effectively, a decision was made to create carefully
+curated datasets, allowing for precise control over their nuances. The general
+approach is outlined below:
+
+```{r, eval=FALSE}
+library("exams")
+library("exams.forge")
+repeat {
+  ... # some data generation
+  if (condition_holds) break
+}
+```
+
+For instance, in calculating the median from five observations $x_i$, we determine
+that the solution lies with the third sorted observation, $x_{(3)}$. Yet, it's
+crucial to verify that this third sorted observation doesn't coincide
+with the third observation itself. Otherwise, a student might overlook a crucial step
+in median computation. This concern is resolved as follows:
+
+```{r, eval=FALSE}
+library("exams")
+library("exams.forge")
+repeat {
+  x  <- sample(1:10, size=5)
+  sx <- sort(x)
+  if (x[3]!=sx[3]) break
+}
+x
+```
+
+The `exams.forge` package was developed with the
+primary objective of "forging" exam tasks in combination with the `exams` package, along with
+auxiliary functions aimed at streamlining the process of generating Moodle exercises.
+The package consists of various functions divided into 7 categories based on
+their attributes. The nomenclature of the categories is as follows: Data
+Conversion and Modification, Statistical Analysis, Mathematical
+Computations, Exercise Generation, String Manipulation, LaTeX and HTML Functions and
+General Purpose Functions.
+
+The `exams.forge` package is intended for educators responsible for crafting
+examination materials within the domain of statistics, for example fundamental 
+courses like Statistics I and II, utilizing the R programming language. 
+The objective is to optimize the process of generating a substantial array of 
+assessment items, thus allowing instructors to channel their efforts toward
+enhancing the substantive quality of the tasks.
+
+To what extent has the package been employed thus far?
+
+As a result of the onset of the COVID-19 pandemic in the spring of 2020,
+the Chair of Statistics at the Humboldt University of Berlin implemented
+non-compulsory, remote, digital examinations accommodating up to 500
+participants. These examinations were administered within the domain of
+the foundational courses, Statistics I and II, deploying the Moodle
+platform for exams.
+
+In the context of Statistics I and II, each examination comprised a set
+of twenty questions, and for every question, an extensive array of one
+hundred variants was crafted. These variants encompassed a spectrum of
+distinctions, including variations in numerical values, shifts in
+content, or the weaving of diverse narratives. Moodle, our chosen
+platform, employed a random selection process, where one of the
+hundred available variants was assigned to each student. This meticulous 
+approach guaranteed that each student received a unique examination, as opposed 
+to the two-variant approach frequently taken in traditional face-to-face 
+examinations.
+
+In summary, `exams.forge` is an R package designed for educators that
+simplifies the creation of statistical exercises. Beyond enhanced
+statistical functions, it offers specialized formatting tools, data
+generation functions, and XML file adaptations, created by the exams
+package, to facilitate the integration of exercises into Moodle.
+
+Now, let's explore the specifics of the first category, where we delve
+into a set of essential functions designed to enhance utility and
+streamline various data processing tasks.
+
+# Data Conversion and Modification
+
+## Classical Univariate Time Series
+
+### `ts_data`
+
+Creates a univariate time series by combining elements of a linear or
+exponential trend, additive or multiplicative seasonal adjustment, and
+white noise. The function generates a time series object with specified
+parameters, including the length of the series, trend presence and
+coefficients, seasonal adjustment (with coefficients), and error terms
+(with coefficients). The resulting time series is structured as a
+`ts_data` object, allowing for further analysis and exploration.
+
+```{r}
+# Generate a time series 
+ts_eg <- ts_data(end = 20, trend = TRUE, trend.coeff = c(1, 0.5),
+                               season = TRUE, season.coeff = c(0.2, 0.1),
+                               error = TRUE, error.coeff = 0.1, digits = 2)
+print(ts_eg)
+```
+
+### `as_ts`
+
+Transforms a `ts_data` object into a time series object (`ts`).
+
+```{r}
+ts <- ts_data(12, trend.coeff= c(sample(0:10, 1), sample(1+(1:10)/20, 1)))
+as_ts(ts)
+```
+
+### `ts_moving_average`
+
+The `ts_moving_average` function calculates the moving average for a
+`ts_data` object. This function takes a `ts_data` object (`ts`) and a
+user-defined order for the moving average (`order`). The result is an
+extended `ts_data` object containing information about the filter used
+for the moving average (`filter`) and the computed moving average values
+(`moving.average`).
+
+```{r}
+# Create a time series data object with sinusoidal fluctuations
+ts <- ts_data(20, trend.coeff = c(2))
+
+# Compute the moving average with an order of 5
+result_ts <- ts_moving_average(ts, 5)
+
+# Display the original and extended time series data objects
+cat("Original Time Series Data:\n")
+str(ts)
+
+cat("\nExtended Time Series Data with Moving Average:\n")
+str(result_ts)
+```
+
+### `ts_trend_season`
+
+The `ts_trend_season` function estimates a trend and season model from a
+time series data object (`ts_data`). It allows for flexible modeling,
+enabling the specification of linear or exponential trends and additive
+or multiplicative seasonality. The function returns an extended
+`ts_data` object with various components, including the estimated trend,
+season, combined trend and season, as well as relevant coefficients. It
+also provides information about the variance of residuals and the
+goodness of fit ($R^2$) for the final model.
+
+```{r}
+# Create a time series data object with a linear trend
+ts <- ts_data(12, trend.coeff = c(sample(0:10, 1), sample(1 + (1:10)/20, 1)))
+
+# Estimate trend and season
+result_ts <- ts_trend_season(ts)
+
+# Display the extended time series data object
+str(result_ts)
+```
+
+## Confidence Intervals
+
+### `CImulen_data`
+
+::: {.infobox style="float: right;" data-latex=""}
+```{=tex}
+\begin{align*}n &=\left\lceil \frac{\sigma^{2} \cdot z^2_{1 -
+\frac{\alpha}{2}}}{e^{2}} \right\rceil \\
+ &=\left\lceil \frac{\sigma^{2} \cdot z^2_{1 -
+\frac{\alpha}{2}}}{4\cdot l^{2}} \right\rceil
+\end{align*}
+```
+:::
+
+This function generates data to determine the required sample size for
+constructing a confidence interval for the population mean with minimal
+rounding operations. Either the stimation error (`e`) or the length of
+the interval (`l`) must be provided. The relationship between `l` and
+`e` is given by $l = 2 \times e$. The function ensures that the computed
+standard deviation (`s`) differs from the known population standard
+deviation (`sigma`).
+
+```{r}
+# Generate data for a confidence interval with estimation error ranging from 0.1 to 1.0
+result <- CImulen_data(sigma = 1:10, e = (1:10)/10)
+str(result)
+result <- CImulen_data(sigma = 1:10, e = (1:10)/10, full=TRUE)
+head(result)
+```
+
+### `CIpilen_data`
+
+The `CIpilen_data` function is designed for generating data to determine
+the necessary sample size of a confidence interval for the population
+proportion using ${z^2/l^2)}$. The estimation error (`e`) or the length
+of the interval (l) must be provided, where the relationship between
+them is defined as (${l=2*e}$). The function ensures that the computed
+sample proportion (`p`) deviates from the known population proportion
+(`pi`).
+
+```{r}
+# Generate data for a confidence interval with estimation error 0.1
+result <- CIpilen_data(pi = (1:9/10), e = (1:9)/10)
+
+# Display the result
+str(result)
+```
+
+## Data Generation
+
+### `add_data`
+
+`add_data` adds data point(s) to the left and/or the right of a given
+data vector `x`.
+
+1.  A box and its width is determined by
+    -   `box="range"` gives a box width of `width=max(x)-min(x)` and two
+        points `xleft=min(x)` and `xright=max(x)`
+    -   `box="box"` gives a box width of `width=IQR(x)` and two points
+        `xleft=quantile(x, 0.25)` and `xright=quantile(x, 0.75)`
+    -   `box=c(xleft, xright)` gives a box width of `width=xright-xleft`
+        and two points `xleft` and `xright`
+2.  The numbers of additional data points is determined by `n`
+    -   `n=c(nleft, nright)` gives the number of points to generate at
+        the left and right
+    -   `n=1` is a short form of `c(0,1)` (the default)
+3.  Within the interval [`xleft-range[2]*width`; `xleft-range[1]*width`]
+    are `nleft` points uniformly drawn and within the interval
+    [`xright+range[1]*width`; `xright+rang[2]*width`] are `nleft` points
+    uniformly drawn (both intervals are colored in red)
+
+```{r, echo=FALSE, fig.width=6, fig.height=3}
+par(mar=c(0,0,0,0))
+plot(c(0, 1), c(0.15,1.15), axes=FALSE, type="n", xlab="", ylab="")
+rect(0.25, 0.25, 0.75, 0.75)
+text(0.25, 0.25, labels="xleft", pos=1)
+text(0.75, 0.25, labels="xright", pos=1)
+text(0.5, 0.75, labels="width", pos=3)
+arrows(0.25, 0.8, 0.75, 0.8, code=3, length=0.1)
+arrows(0.0, 0.5, 0.2, 0.5, code=3, col="red", length=0.1)
+arrows(0.8, 0.5, 1.0, 0.5, code=3, col="red", length=0.1)
+text(0.8, 0.8, "xright+range[1]*width", col="red", srt=90)
+text(1, 0.8, "xright+range[2]*width", col="red", srt=90)
+text(0, 0.8, "xleft-range[2]*width", col="red", srt=90)
+text(0.2, 0.8, "xleft-range[1]*width", col="red", srt=90)
+```
+
+```{r}
+x <- runif(7, 165, 195)
+xr <- add_data(x, "range", n=c(0,1), range=c(1,1.5)) 
+round(xr)
+xb <- add_data(x, "box", n=c(0,1), range=c(1,1.5)) 
+round(xb)
+x1 <- add_data(x, box=c(165,195), n=c(0,1), range=c(1,1.5)) 
+round(x1)
+```
+
+### `cor_data` and `meanint_data`
+
+In this exercise, researchers aim to determine which variable, "number
+of absences in high school" ($X$) or "monthly income of parents" ($Z$),
+better predicts students' average grade points ($Y$) in the
+baccalaureate exam.
+
+```{r}
+n <- sample(seq(25,50,5),1)
+y <- meanint_data(n, c(2,12))
+x <- meanint_data(n, c(36, 50))
+z <- meanint_data(n, c(2,6))
+yx <- cor_data(y, x, r=sample((5:9)/10, 1))
+yz <- cor_data(y, z, r=sample((5:9)/10, 1))
+```
+
+Here, the function `meanint_data` is used to generate random data for
+the variables $X$ and $Z$. It takes two arguments: `n`, the number of
+the observations and `v`, a vector with two elements specifying the range for
+the data where the `n` values are allowed. The first element of the
+vector specifies the lower limit of the data and the second one
+specifies the upper limit for the data.
+
+The second function from the `exams.forge` package we are dealing with
+in this exercise is `cor_data`. This function is used in order to create
+a data set with two variables and a desired correlation coefficient `r`.
+It consists of 3 arguments: the dependent variable $Y$ , the independent
+variables $X$ and $Z$ and the correlation coefficient `r`. The function
+contains 2 more arguments not shown in this exercise, namely the
+argument `method` and the argument `maxit`. `method` indicates which
+correlation coefficient is to be computed, in this case it is going to
+be the default pearson correlation coefficient, and `maxit` presents the
+maximal number of iterations that is set by default on 1000.
+
+Overall, these two functions help in generating random data that
+simulate the relationships between variables as described in the
+exercise.
+
+## Number of Observations
+
+### `data_n`, `data_n25` and `data_nsq`
+
+The `data_n`, `data_nsq`, and `data_n25` functions are designed to
+generate sequences of sample sizes within a specified range, from `min`
+to `max`. Each function serves a unique purpose:
+
+-   `data_n` generates a sequence of sample sizes in the specified
+    range.
+
+-   `data_n25` generates a sequence of sample sizes in the specified
+    range that are divisible only by 2 and 5.
+
+-   `data_nsq` generates a sequence of sample sizes in the specified
+    range whose square root is an integer.
+
+```{r}
+# Generate a sequence of sample sizes from 5 to 10
+data_n(10)
+
+# Generate a sequence of sample sizes whose square root is an integer, from 9 to 961
+data_nsq(1000)
+
+# Generate a sequence of sample sizes divisible only by 2 and 5, from 5 to 1000
+data_n25(1000)
+```
+
+## Number Properties
+
+### `all_integer`
+
+Proves whether all `x`s are integer.
+
+```{r}
+numbers_check <- c(4, 10, 7.00001)
+all_integer(numbers_check)
+```
+
+### `divisor_25`
+
+Checks if a number can be represented as a product of powers of 2 and 5.
+
+```{r}
+number_check <- 0.3125
+result <- divisor_25(number_check)
+```
+
+### `has_digits`
+
+Verifies whether the decimal part of a number consists only of digits
+within a specified tolerance.
+
+```{r}
+# Taken from the exercise "Club_Raucher2"
+maxn <- 100
+repeat {
+  n  <- sample(seq(5, maxn, 5),1)
+  p  <- sample((1:20)/100, 1)
+  x  <- n*c(p, 1-p)  
+  if (all(has_digits(x, 0))) break
+}
+print(has_digits(x, 0))
+```
+
+### `prime_numbers`
+
+Generates a list of prime numbers up to a specified limit.
+
+```{r}
+prime_numbers(20)
+```
+
+### `primes`
+
+Computes the prime factorization of each element in a numeric vector,
+providing a matrix that delineates the power of each prime number.
+
+```{r}
+primes(1:5)
+```
+
+## Result Generation with Rounding
+
+### `as_result`, `rounded`, `tol`, `val` and `digits`
+
+This set of functions is designed to facilitate precise rounding of a
+numerical input `x` based on specified `digits` and a user-defined
+rounding function (`FUN`). Additionally, the functions offer a
+convenient way to set a tolerance for the result. If a tolerance is not
+explicitly provided, it defaults to the maximum of 2 times 10 to the
+power of negative `digits`.
+
+-   `as_result (x, digits, tol = NA, FUN = round2)`: Rounds the input
+    `x` with specified `digits` using the specified rounding function
+    (`FUN`), and allows for setting a tolerance (defaulting to the
+    maximum of 2 times 10 to the power of negative `digits` if not
+    provided).
+
+-   `tol(x)`: Computes the tolerance for a given input `x`.
+
+-   `rounded(x)`: Returns the rounded value of `x`.
+
+-   `val(x)`: Returns the value of `x`.
+
+-   `digits(x)`: Returns the specified digits for rounding `x`.
+
+```{r}
+x <- as_result(1/3, "prob")
+tol(x)
+rounded(x)
+digits(x)
+val(x)
+```
+
+## Tables
+
+### `as_table`
+
+Transforms a vector into a horizontal table, facilitating a more
+structured representation of the data. The parameters are the same as in
+`xtable` which is used internally. Intended for the use as (class)
+frequency table.
+
+```{r}
+x   <- runif(3)
+tab <- vec2mat(x, colnames=1:length(x))
+as_table(tab)
+tab <- vec2mat(x, colnames=sprintf("%.0f-%0.f", 0:2, 1:3))
+as_table(tab)
+```
+
+### `assoc_data`
+
+Reorders observations in a frequency table to approximate a specified
+target association, while maintaining unchanged marginal frequencies.
+The function utilizes a provided frequency table and computes an
+association (or correlation) measure using the specified function
+(`FUN`). The target association may not be achieved entirely, especially
+for extreme target values like +1 or -1.
+
+-   `target`: Specifies the target association to be approximated. If
+    set to `NA`, the original table is returned.
+-   `zero`: Allows for zero entries in the common distribution.
+-   `tol`: Sets the maximal deviation of the association measure from
+    the target value.
+-   `maxit`: Limits the number of optimization steps.
+
+A solution is not assured, necessitating adjustments to parameters such
+as `maxit`, `tol`, or a reconsideration of the chosen target value. The
+resulting association value is stored in the attribute
+`attr ("target")`.
+
+```{r}
+# Reordering observations in a frequency table to approximate a target association
+
+# Creating a frequency table (2x2) with arbitrary values
+frequency_table <- matrix(c(10, 20, 30, 40), nrow = 2, byrow = TRUE)
+
+# Defining a target association value
+target_association <- 0.5
+
+# Applying assoc_data to reorder the frequency table to approximate the target association
+result_table <- assoc_data(frequency_table, target = target_association, zero = TRUE, tol = 0.1, maxit = 100)
+
+# Displaying the resulting reordered table
+print(result_table)
+```
+
+## Vector Generation and Transformation
+
+### `random`
+
+The `random` function generates a random permutation of indices from 1
+to the length of the input vector `v`.
+
+```{r}
+random(-1:6)
+```
+
+### `refer`
+
+The `refer` function facilitates the generation of names for elements
+within a vector. It provides a mechanism for assigning customized names
+based on a specified format, allowing us to enhance the interpretability
+of vector elements.
+
+```{r}
+# Generating a vector of 5 random uniform values
+x <- runif(5)
+
+# Applying refer with LaTeX default format
+latex_result <- refer(x)
+str(latex_result)
+
+# Applying refer with R default format
+r_default_result <- refer(x, fmt = "%s[%.0f]")
+str(r_default_result)
+```
+
+In the first example, a vector `x` is created with 5 random uniform
+values using `runif(5)`. The `refer` function is then applied to `x`
+without specifying a custom format (`fmt`). By default, the LaTeX format
+is used, resulting in names that follow the pattern "x\_{1}", "x\_{2}",
+..., "x\_{n}", where n is the length of the vector. In the second
+example, the refer function is applied to the vector x with a custom
+format specified as "fmt="%s[%.0f]". This R default format results in
+names following the pattern"x[1]","x[2]", ...,"x[n]", where n is the
+length of the vector.
+
+### `transformif`
+
+The `transformif` function offers conditional transformations for a
+vector `x` based on the specified condition `cond`. When the condition
+holds true, the transformation is applied to each element of `x`. The
+dynamic transformation is determined by parameters `a`, `b`, and `p`,
+allowing for versatile adjustments. Specifically, if the condition is
+met and `p` is set to 0, the transformation becomes
+$\log(a + b \cdot x)$; otherwise, it is $(a + b \cdot x)^p$.
+
+```{r}
+# Generate a vector with a mix of positive and negative values
+v <- c(2, -3, 1, 0, 5, -4)
+
+# Transform only negative values using a custom shift (a) and scale (b)
+transformed_vector <- transformif(v, v < 0, a = 2, b = 0.5)
+
+# Display the original and transformed vectors
+cat("Original Vector: ", v, "\n")
+cat("Transformed Vector: ", transformed_vector, "\n")
+```
+
+### `vec2mat`
+
+The `vec2mat` function transforms a vector into either a horizontal or
+vertical matrix, allowing users to specify new column and row names.
+Existing names can be overwritten if `colnames` or `rownames` are
+provided.
+
+```{r}
+# Generate a vector
+vec <- c(1, 2, 3, 4, 5)
+
+# Convert the vector to a horizontal matrix with custom column names
+mat_horizontal <- vec2mat(vec, colnames = c("A", "B", "C", "D", "E"))
+
+# Display the resulting matrix
+print(mat_horizontal)
+
+# Convert the vector to a vertical matrix with custom row names
+mat_vertical <- vec2mat(vec, rownames = c("First", "Second", "Third", "Fourth", "Fifth"), horizontal = FALSE)
+
+# Display the resulting matrix
+print(mat_vertical)
+```
+
+# Statistical Analysis
+
+## Approximations
+
+### `binom2norm`, `clt2norm` and `t2norm`
+
+`binom2norm` checks if the sample size and parameters of a binomial
+distribution are suitable for approximating it with a normal
+distribution. Returns TRUE if conditions based on the binomial
+distribution parameters (`size`, `prob`, and optionally `type`) are met.
+The default threshold `c` is 9. The default value of $c=9$ can be
+overwritten with `options(distribution.binom2norm=5)` or explicitly set.
+
+```{r}
+# Single type
+size <- 421
+prob <- 0.5
+cutoff <- 9
+result_single <- binom2norm(size, prob, c=cutoff, type="single")
+cat("Single type:", result_single, "\n")
+
+# Double type
+result_double <- binom2norm(size, prob, c=cutoff, type="double")
+cat("Double type:", result_double, "\n")
+```
+
+`clt2norm` examines if the sample size (`n`) is large enough for the
+Central Limit Theorem to provide a reasonable approximation to a normal
+distribution. Returns TRUE if n is greater than a specified threshold
+(`c`), with the default threshold being 30. The default value of $c=30$
+can be overwritten with `options(distribution.clt2norm=5)` or explicitly
+set. Note that this function does not verify the existence of the
+expectation and variance, which are required by the Central Limit
+Theorem.
+
+```{r}
+# Check for a broader range of observations
+observations <- c(20, 40, 80, 120, 200, 300, 500, 1000)
+
+# Assess whether each observation size is suitable for CLT approximation
+clt_approximation_results <- clt2norm(n = observations)
+
+# Display the results
+print(clt_approximation_results)
+```
+
+`t2norm` determines if the sample size (`n`) is large enough for a
+t-distribution to be reasonably approximated by a normal distribution.
+Returns TRUE if `n` is greater than a specified threshold (`c`), where
+the default threshold is 30. The default value of $30$ can be
+overwritten with `options(distribution.t2norm=50)` or explicitly set.
+
+```{r}
+# Check for a range of observations
+observations <- c(10, 30, 50, 100, 200)
+
+# Assess whether each observation size is suitable for t-distribution approximation
+approximation_results <- t2norm(n = observations)
+
+# Display the results
+print(approximation_results)
+```
+
+## Bivariate Descriptive Statistics
+
+### `grouped_data`
+
+Determines the mean, mode, quantile or median for data that has been
+grouped.
+
+```{r}
+turnier <- ifelse(as.integer(format(Sys.Date(), "%Y")) %% 4 >= 2, "welt", "europa")
+popSize     <- 100
+classbreaks <- c(0, 50, 100, 200)
+gd <- grouped_data(classbreaks, popSize*ddiscrete(runif(length(classbreaks)-1)), 0.5)
+print(gd)
+```
+
+In this example we can observe how the `grouped_data` function
+calculates the median from the data that has been grouped, namely it
+takes the `classbreaks`, the product of `popSize` and a random discrete
+uniform distribution created using
+`ddiscrete(runif(length(classbreaks)-1))`, and a weighting factor of
+$0.5$ as parameters.
+
+### `lcmval`
+
+This function computes the least common multiple for a numeric vector
+`x`.
+
+```{r}
+lcmval(c(144, 160, 175))
+```
+
+### `mcval`
+
+The function computes all the modes (most common value) of data.
+
+```{r}
+# Numeric
+x <- sample(1:5, size=25, replace = TRUE)
+table(x)
+mcval(x)
+# Character
+x <- sample(letters[1:5], size=25, replace = TRUE)
+table(x)
+mcval(x)
+# Histogram
+x <- hist(runif(100), plot=FALSE)
+mcval(x)
+mcval(x, exact=TRUE)
+```
+
+### `nom.cc`, `nom.cramer`, `ord.spearman` and `ord.kendall` (Association)
+
+A set function which determines a compute association measure based on
+a contingency table:
+
+-   `nom.cc` (Corrected Contingency Coefficient): Computes the corrected
+    contingency coefficient, a statistical measure assessing the
+    association between two categorical variables. This coefficient is
+    an enhancement of the contingency coefficient, correcting for
+    potential biases.
+
+-   `nom.cramer` (Cramer's V or Phi): Calculates Cramer's V or Phi,
+    providing a measure of association between categorical variables.
+    Cramer's V is an extension of the phi coefficient, suitable for
+    contingency tables with more than 2x2 cells.
+
+-   `ord.spearman` (Spearman's Rank Correlation): Computes Spearman's
+    rank correlation, a non-parametric measure of association between
+    two ordinal variables. It assesses the monotonic relationship
+    between the variables, providing insights into their degree of
+    association.
+
+-   `ord.kendall` (Kendall's Rank Correlation): Computes Kendall's rank
+    correlation, a non-parametric measure evaluating the strength and
+    direction of the association between two ordinal variables. This
+    method is particularly suitable for detecting monotonic
+    relationships.
+
+```{r}
+tab <- matrix(round(10*runif(15)), ncol=5)
+nom.cc(tab)
+nom.cc(tab, correct=TRUE)
+nom.cramer(tab)
+ord.spearman(tab)
+ord.kendall(tab)
+```
+
+### `pearson_data`
+
+The following exercise asks for the calculation of the Bravais- Pearson
+correlation coefficient from the scores recorded from selected students
+in the mathematics and statistics exam.
+
+```{r}
+data(sos100, package = "exams.forge.data")
+n     <- sample(4:8, 1)
+rseq  <- seq(-0.95, 0.95, by=0.05)
+r     <- sample(rseq, size=1, prob=rseq^2)
+xy0   <- pearson_data(r=r, nmax=n, n=100, xsos=sos100)
+str(xy0)
+```
+
+The `pearson_data` function is used to generate an integer data set that
+can be used to compute a correlation, specifically the Pearson
+correlation coefficient. It is designed to create a data set with a
+specified desired correlation value `r` while following using the
+function `sumofsquares`.
+
+We define 4 arguments for this function in our example:
+
+1.  `r`: as mentioned previously it is our desired correlation we want
+    to achieve in the generated data set. The Pearson correlation
+    coefficient measures the linear relationship between two variables
+    and ranges from -1 to 1.
+
+2.  `n`: marks the number that we want to decompose as a sum of squares.
+    The generated data set will consist of integer values, and this
+    argument specifies how many data points should be included in the
+    data set. Here `n` is set to 100, meaning that the data set will
+    have 100 data points.
+
+3.  `nmax`: presents the maximal number of squares in the sum of
+    squares. The `sumofsquares` function is used internally to generate
+    the data set, and `nmax` controls the number of squares allowed in
+    the decomposition.
+
+4.  `xsos`: is a precomputed matrix here set to 100.
+
+`maxt`, not mentioned in this exercise, specifies the maximal number of seconds
+that the `pearson_data` routine should run. It sets a time limit on how
+long the function can take to generate the data set.
+
+### `sumofsquares`
+
+This function endeavors to express an integer, denoted as `n`, as a
+summation of squared integers ($n = \sum_{i=1}^k x_i^2$), where each
+$x_i$ lies within the range $1 \leq x_i < n$, and the count of terms
+($k$) is bounded by $n_{\text{max}}$. If the parameter `zerosum` is set
+to true, it ensures that the summation $\sum_{i=1}^k c_i x_i$ equals
+zero, where $c_i$ can take values of either -1 or +1. The computational
+process is constrained by a specified time limit, `maxt` seconds,
+which might lead to an incomplete identification of all potential
+solutions. To optimize efficiency, the use of `rbind` operations within
+the function has been replaced by the allocation of matrices with a
+defined number of rows, denoted as `size`, to systematically collate the
+results.
+
+```{r}
+# Example: Decomposing the integer 50 into a sum of squared integers
+sos_example <- sumofsquares(50, nmax = 8, zerosum = FALSE, maxt = Inf, size = 100000L)
+str(sos_example)
+```
+
+In this example, the `sumofsquares` function is employed to decompose
+the integer 50 into a sum of squared integers. The function allows a
+maximum of 8 terms in the decomposition (`nmax = 8`), does not enforce a
+zero sum (`zerosum = FALSE`), and has no time limit (`maxt = Inf`). The
+result is stored in the `sos_example` variable and then printed to the
+console.
+
+## Univariate Descriptive Statistics
+
+### `means` and `means_choice`
+
+`means_choice` computes a list of mean values for a given data vector
+`x`:
+
+-   arithmetic mean,
+-   median,
+-   harmonic mean,
+-   geometric mean,
+-   (first) mode,
+-   trimmed mean, and
+-   winsorized mean.
+
+If the parameter `trim` and/or `winsor` set to `NA` then these means
+will not be computed.
+
+```{r}
+digits <- 2  # round to two digits
+repeat {
+  x  <- round(runif(7, min=165, max=195), digits)
+  ms <- means_choice(x, digits)         
+  if (attr(ms, "mindiff")>0.1) break   # make sure that all values are different by 0.1
+}
+ms <- unlist(ms)
+sc <- to_choice(ms, names(ms)=='mean') # arithmetic mean is the correct solution
+str(sc)
+```
+
+The attribute `mindiff` gives the minimal distance between two mean
+values. This might be important for setting `extol` the tolerance for
+numeric solutions.
+
+### `scale_to`
+
+Given a numeric vector it uses a linear transformation to re-scale the
+data to a given mean and standard deviation. The default is to
+standardize the data.
+
+```{r}
+x <- runif(21)
+y <- scale_to(x, mean=2, sd=0.5)
+print(y)
+```
+
+## Combinatorics
+
+### `combinatorics`, `permutation`, `variation` and `combination` 
+
+Computation of all results for variation, combination and permutation with and
+without repetition.
+
+```{r}
+variation(7,3)         # without replication
+variation(7,3, TRUE)   # with replication
+combination(7,3)       # without replication
+combination(7,3, TRUE) # with replication
+permutation(7)
+permutation(7, c(2,1,4)) # three groups with indistinguishable elements
+z <- combinatorics(7, 4)
+str(z)
+```
+
+```{r}
+permutation(5, c(2, 2)) 
+```
+
+The warning is raised because the sum of the specified group sizes
+(`c(2, 2)`) is less than the total number of elements (`n = 5`). This
+implies that the specified groups do not cover all elements, leaving
+some elements without a designated group.
+
+In the context of permutations, the `permutation` function calculates the number of permutations of a set with specified group
+sizes. When there are not enough groups or when the sum of group sizes
+is less than the total number of elements, it means that some elements
+will be left unassigned or unmatched in the permutation process.
+
+To account for these unmatched elements, the function automatically adds
+one or more groups, each containing a single element, to cover the
+remaining elements. This ensures that every element has a
+place in the permutations.
+
+In this case, we have 5 elements and specified two groups, each with
+size 2. However, 1 element remains unassigned. The
+function adds a one-element group to accommodate the leftover element,
+and then it calculates the permutations of the entire set.
+
+To summarize, the warning essentially declares that the specified
+group sizes don't cover all the elements, and the function has
+automatically adjusted by adding one or more one-element groups to make
+sure every element is considered in the permutation calculation.
+
+### `lfact`, `lfactquot` and `lbinom`
+
+`lfact` calculates the natural logarithm of the factorial of a given number `n`. The factorial of a non-negative
+integer `n`, denoted as `n!`, is the product of all positive integers less than or equal to `n`. The natural
+logarithm of the factorial is computed to avoid overflow errors when dealing with large numbers. This function
+helps in computing large factorial values efficiently by returning their natural logarithms.
+
+`lfactquot` calculates the natural logarithm of a quotient of factorials. It takes a number `n` and additional
+arguments as factors, and computes the natural logarithm of the quotient of the factorial of `n` and the product
+of factorials of the additional arguments. This function is useful in scenarios where calculating large
+factorials or their quotients is required, as it helps avoid numerical instability by working with logarithms.
+
+`lbinom` computes the natural logarithm of the binomial coefficient, also known as "`n` choose `k`". The binomial
+coefficient `n choose k` represents the number of ways to choose `k` elements from a set of `n` elements without
+regard to the order of selection. The natural logarithm of the binomial coefficient is computed to handle large
+values efficiently and to avoid numerical overflow. This function is helpful in scenarios where the exact value
+of the binomial coefficient is not required, but its logarithm is sufficient for computation or analysis.
+
+```{r}
+lfact(5)
+lfactquot(5,3,2)
+lbinom(6,3)
+```
+
+## Distributions
+
+### `ddunif2`, `pdunif2`, `qdunif2` and `rdunif2`
+
+These functions provide probability mass function, distribution function,
+quantile function, and random generation for the sum of two independent
+discrete uniform distributions. The minimum and maximum values for the
+uniform distributions can be specified using the `min` and `max`
+parameters.
+
+-   `ddunif2`: Distribution function.
+-   `pdunif2`: Probability mass function.
+-   `qdunif2`: Quantile function.
+-   `rdunif2`: Random generation.
+
+```{r}
+# Probability Mass Function
+pdunif2(1:13)
+
+# Distribution Function
+ddunif2(1:13)
+
+# Quantile Function
+qdunif2((0:4)/4)
+
+# Random Generation
+rdunif2(10)
+```
+
+### `distribution`
+
+An object of class `distribution` holds a distribution (of a random
+variable). It is specified by a name and the distribution values. The
+name is used create quantile (`("q", name)`) and cumulative distribution
+functions (`("p", name)`), for example
+
+-   `binom` hypergeometric distribution with parameters: `size`, `prob`
+-   `hyper` hypergeometric distribution with parameters: `m`, `n`, `k`
+-   `geom` geometric distribution with parameter: `prob`
+-   `pois` Poisson distribution with parameter: `lambda`
+-   `unif` hypergeometric distribution with parameters: `min`, `max`
+-   `exp`: exponential distribution with parameter: `rate`
+-   `norm`: normal distribution with parameters: `mean`, `sd`
+-   `lnorm`: log-normal distribution with parameters: `meanlog`, `sdlog`
+-   `t`: Student t distribution with parameter: `df`
+-   `chisq`: chi-squared distribution with parameter: `df`
+-   `f`: F distribution with parameters: `df1`, `df2`
+
+The names of the above-mentioned distributions can be abbreviated; for all others
+the exact name must be given.
+
+```{r}
+d <- distribution("t", df=15)
+quantile(d, c(0.025, 0.975))
+d <- distribution("norm", mean=0, sd=1)
+cdf(d, c(-1.96, +1.96))
+d <- distribution("binom", size=9, prob=0.5)
+pmdf(d, 5)
+```
+
+### `distribution` and `prob1`
+
+The `exams.forge` package includes numerous functions designed to aid
+with exercises involving distributions.
+
+In this exercise, the functions `distribution` and `prob1` serve as
+fundamental building blocks to unravel the intricacies of a dice game,
+where chance and probability intersect to determine one's success.
+
+```{r}
+# Taken from the exercise "Würfel 2".
+d      <- distribution("dunif", min=1, max=6)
+border <- sample(1:5, size=1)+1
+ptype  <- "point"
+lsg    <- prob1(d, border)
+sc     <- num_result(lsg, 4)
+str(d)
+print(lsg)
+```
+
+In the context of this exercise, the functions `distribution` and
+`prob1` play a crucial role in determining the probability of success in
+the dice game "Jule". `distribution` is used to model the outcomes of a
+six-sided die, while `prob1` calculates the probability of rolling the
+next required number, making them essential tools for understanding the
+game's dynamics.
+
+`d <- distribution("dunif", min=1, max=6)`
+
+This line defines a discrete uniform distribution called `d` with
+minimum value 1 and maximum value 6. Generally, the `distribution`
+function creates a distribution with a `name` in this case `dunif`.
+
+`lsg <- prob1(d, border)`
+
+This is the key part of the code. It calculates the point probability
+using the `prob1` function. The `prob1` function takes two arguments:
+
+-   `d`: The probability distribution (in this case, the discrete
+    uniform distribution representing the six-sided die).
+
+-   `border`: A randomly selected value from the integers 1 to 5
+    (inclusive) using the `sample` function.
+
+The `prob1` function calculates the probability of rolling the next
+required number in the game, given the current state of the game
+(represented by the `border` value). It is an important function for
+this exercise as it directly addresses the main question of the
+probability of rolling the next required number.
+
+`sc <- num_result(lsg, 4)`
+
+This line defines a numerical result named `sc`. It captures the result
+of the point probability calculation done by the `prob1` function.
+
+### `is.distribution`
+
+Checks if the `object` is a distribution object. If the `name` is given,
+it checks if the distribution type is the same.
+
+```{r}
+# Check if an object is a distribution
+x <- distribution("norm", mean=1.4, sd=0,44)
+is.distribution(x)
+
+# Check if an object is a specific distribution type
+is.distribution(x, "exp")
+```
+
+### `binom_param` and `sqrtnp`
+
+The `binom_param` function computes parameters for a binomial
+distribution based on the number of trials (`n`) and the success
+probability (`p`). Optionally, it calculates the mean, standard
+deviation, and other measures. If mean, standard deviation, or other
+measures are not specified, they default to NA.
+
+```{r}
+# Generate binomial parameters for a specific case
+params <- binom_param(600, 0.6, mean = 0, sd = 0)
+
+# Display the generated parameters
+print(params)
+```
+
+The `sqrtnp` function calculates the square root of the product of `n`,
+`p`, and (1-p) for all combinations of given n and p values. If the
+resulting value has only digits after the decimal point, the
+corresponding n, p, and sqrt(n*p*(1-p)) are presented in a structured
+data frame.
+
+```{r}
+# Calculate sqrtnp for different combinations of n and p
+result <- sqrtnp(n = c(50, 100, 150), p = c(0.25, 0.5, 0.75), digits = 3)
+
+# Display the resulting data frame
+print(result)
+```
+
+In this example: - The `sqrtnp` function is employed to compute the
+square root of the product of n, p, and (1-p) for various combinations
+of n and p.
+
+-   The vectors `c(50, 100, 150)` and `c(0.25, 0.5, 0.75)` represent
+    different observation numbers and probabilities, respectively.
+
+-   The `digits` parameter is set to 3, specifying the number of digits
+    to consider.
+
+-   The resulting data frame, denoted as `result`, contains the
+    combinations of n, p, and sqrt(n*p*(1-p)) where the computed value
+    has only digits after the decimal point.
+
+This function is particularly useful for exploring the relationships
+between observation numbers, probabilities, and their respective square
+roots in a systematic manner. Adjusting the `digits` parameter allows
+users to control the precision of the results.
+
+### `cdf`
+
+Computes the cumulative distribution function of a distribution using
+`paste0('p', name)`.
+
+```{r}
+# Create a distribution object for a normal distribution
+normal_distribution <- distribution("norm", mean = 0, sd = 1)
+
+# Calculate CDF for normal distribution
+quantiles <- seq(-3, 3, by = 0.5)  # Quantiles for which to compute CDF
+cdf_values <- cdf(normal_distribution, quantiles)  # Compute CDF values
+
+# Display the results
+cat("Quantile\tCDF Value\n")
+cat("----------------------------\n")
+for (i in 1:length(quantiles)) {
+  cat(quantiles[i], "\t\t", cdf_values[i], "\n")
+}
+```
+
+### `pmdf`
+
+Computes the probability mass/density function of a distribution using
+`paste0('d', name)`.
+
+```{r}
+# Taken from the exercise "Haribo_3"
+n    <- sample(2:10, 1)    # Gruppe 1: keine Frösche und Himbeeren
+nj   <- 0                  
+m    <- sample(2:10, 1)    # Gruppe 2: Frösche und Himbeeren
+mj   <- sample(1:(m-1), 1)              
+k    <- mj+nj
+d    <- distribution(name="hyper", m=m, n=n, k=k)
+lsg  <- pmdf(d, k)
+str(lsg)
+```
+
+### `sample_size_freq`
+
+The `sample_size_freq` function assesses the compatibility of vectors
+containing possible sample sizes (`n`) and corresponding relative
+frequencies (`f`). It checks whether the product of sample sizes and
+relative frequencies results in integer absolute frequencies. This
+function is particularly useful in scenarios where the requirement for
+integer absolute frequencies is essential, such as in the design of
+experiments and statistical sampling.
+
+```{r}
+# Generating a set of random discrete probabilities with a total sum of 200
+f <- ddiscrete(runif(6), unit=200)
+
+# Checking compatibility for a sequence of sample sizes from 50 to 300 with a step of 1
+result_default <- sample_size_freq(seq(50, 300, 1), f)
+str(result_default)
+
+# Checking compatibility for a sequence of sample sizes from 10 to 700 with a step of 1, with 'which' set to 200
+result_specific <- sample_size_freq(seq(10, 700, 1), f, which=200)
+str(result_specific)
+```
+
+-   `f` is generated using the `ddiscrete` function. It creates a set of
+    discrete probabilities based on a random uniform distribution with
+    six elements. The `unit=200` argument ensures that the total sum of
+    probabilities is 200.
+
+-   `sample_size_freq` is applied to a sequence of sample sizes ranging
+    from 50 to 300 with a step of 1.
+
+-   The function returns the first sample size in the sequence that
+    results in integer absolute frequencies.
+
+-   `sample_size_freq` is applied to a sequence of sample sizes ranging
+    from 10 to 700 with a step of 1.
+
+-   The `which=200` argument is specified, meaning the function
+    specifically returns the sample size at the 200th position in the
+    sequence.
+
+-   The function returns the sample size 200 from the specified
+    sequence specifically, that satisfies the condition of creating
+    integer absolute frequencies.
+
+In summary, this example demonstrates the use of the `sample_size_freq`
+function to check the compatibility of different sequences of sample
+sizes with the given discrete probabilities. The results indicate which
+sample sizes, under the specified conditions, result in integer absolute
+frequencies.
+
+### `q2norm`
+
+The `q2norm` function takes two arguments: `x`, which is a numeric
+vector containing two quantiles, and `probs`, which is a numeric vector
+containing the corresponding probabilities (defaulting to
+`c(0.025, 0.975)`). The function calculates the z-scores corresponding
+to the input probabilities.Based on the quantiles and z-scores, it
+estimates the mean and standard deviation of the corresponding normal
+distribution.The results are returned as a list with components `mean`
+and `sd`.
+
+The example section demonstrates how to use the function with a set of
+example quantiles and probabilities, providing an estimated mean and
+standard deviation for the normal distribution.
+
+```{r}
+# Estimate mean and standard deviation for a normal distribution based on quantiles.
+
+quantiles <- c(10, 20)  # Example quantiles
+probabilities <- c(0.1, 0.9)  # Example probabilities
+result <- q2norm(quantiles, probabilities)
+str(result)
+```
+
+## Histogram Manipulation and Analysis
+
+### `histbreaks`
+
+The `histbreaks` function is designed to randomly select breakpoints
+from a given set of `breaks` values. When the outer parameter is set to
+TRUE, it ensures that the first and last elements of the `breaks` values
+are always included in the resulting breakpoints. If `size` is provided
+as a vector, the number of breakpoints is first sampled from this
+vector, adding flexibility to the selection process.
+
+```{r}
+# Always includes 100 and 200 in the breakpoints
+histbreaks(seq(100, 200, by = 10), 4)
+
+# Always includes 100 and 200; randomly chooses between 3 to 5 breakpoints
+histbreaks(seq(100, 200, by = 10), 3:5)
+
+# May not include 100 and 200
+histbreaks(seq(100, 200, by = 10), 4, outer = FALSE)
+```
+
+### `histdata`
+
+`histdata` computes data about the corresponding histogram to a vector
+like `hist`, but returns more information which might be necessary for
+exercises. In contrast to `hist` `histdata` requires that `breaks`
+covers the entire range of `x`.
+
+`histdata` has the additional parameter `probs`. If `breaks="quantiles"`
+then it determines which quantiles are used.
+
+```{r}
+x  <- runif(25) 
+h1 <- hist(x, plot=FALSE)
+str(h1)
+h2 <- histdata(x)
+str(h2)
+```
+
+The returned list contains the following elements:
+
+-   `x`: the finite data values used
+-   `class`: the class number in which a value falls starting with 1 for
+    the first class
+-   `xname`: the x argument name
+-   `breaks`: the class borders
+-   `lower`: the lower class borders
+-   `upper`: the upper class borders
+-   `width`: the class widths
+-   `mid`: the class mids
+-   `equidist`: if the classes are equidistant or not
+-   `counts`: the number of observations in each class
+-   `relfreq`: the relative class frequency
+-   `density`: the frequency density computed as relative frequency
+    divided by class width
+
+You can compute mean, quantile, median and mode for a histogram:
+
+```{r}
+x <- runif(25) 
+h <- histdata(x)
+# mean
+mean(h)
+# median & quantile
+median(h)
+quantile(h)
+# mode
+mcval(h)
+mcval(h, exact=TRUE)
+```
+
+### `histwidth`
+
+Creates histogram data sampled from a set of class widths with following
+properties:
+
+-   the class density has a unique maximum,
+-   are the class density terminating numbers, and
+-   the class frequency maximum differs from the class density maximum.
+
+```{r}
+hw <- histwidth(1.6, 2.1, widths=0.05*(1:4))
+str(hw)
+x  <- histx (hw$breaks, hw$n)
+hist(x, hw$breaks)
+rug(x)
+```
+
+### `histx`
+
+Generates a data set based on specified class borders (breaks) and the
+desired number of observations for each class. The resulting data set is
+structured to distribute data points across the defined classes.
+
+```{r}
+breaks <- seq(1.6, 2.1, by=0.1)
+x <- histx (breaks, sample(5:15, length(breaks)-1))
+hist(x, breaks)
+rug(x)
+```
+
+In this example, `histx()` is used to generate a data set based on the
+specified breaks and the number of observations in each class. The
+resulting data is then plotted using the `hist()` function, and a rug
+plot is added using the `rug()` function.
+
+## Probability Theory
+
+### `data_prob2`
+
+The data_prob2 function generates a matrix of probabilities or
+frequencies based on the specified parameters. If data is provided, it
+will be normalized so that the sum of finite elements equals 1. If
+row and column names are not given, event names from the alphabet
+(`LETTERS`) are used. The resulting matrix has various attributes:
+
+-   `marginals`: A list of row and column marginal distributions.
+-   `byrow`: A matrix with conditional probabilities by row.
+-   `bycol`: A matrix with conditional probabilities by column.
+-   `expected`: A matrix with the expected probabilities under
+    independence.
+-   `prob`: A vector of all computed probabilities (excluding the
+    expected ones).
+
+```{r}
+# Generate a data_prob2 object with default parameters
+x <- data_prob2()
+str(x)
+
+# Generate a data_prob2 object with colnames="E"
+data_prob2(colnames="E")
+
+# Generate a data_prob2 object with nrow=3
+data_prob2(nrow=3)
+```
+
+### `ddiscrete`
+
+`ddiscrete` generates a finite one-dimensional discrete probability
+distribution. If the length of `x` is one then `x` is the number of
+elements. Otherwise `x` is considered a starting distribution and
+length of `x` is the number of elements.
+
+The parameter `zero` determines if the final distribution can contain
+the probability entry zero or not. Since, for computation of exercises
+based on a one-dimensional discrete probability distribution, it is
+favorable that the entries are fractions having the same denominator, the
+parameter `unit` can be used for this purpose. Thus, if the smallest non-zero
+denominator should be `1/7` then use `unit=7`; the default is a power of
+10.
+
+```{r}
+ddiscrete(6) # fair dice
+x <- runif(6)
+ddiscrete(x)
+ddiscrete(x, zero=TRUE)
+ddiscrete(x, unit=15)
+fractions(ddiscrete(x, unit=15))
+```
+
+The next exercise acts as a second example for better understanding of
+the `ddiscrete` function:
+
+Exercise: Modify the Discrete Probability Function for a Biased Coin
+
+We consider a biased coin with an initial probability distribution
+represented as `c(0.8, 0.2, 0, 0, 0, 0)` , where the first element
+corresponds to the probability of getting heads, and the second element
+corresponds to the probability of getting tails.
+
+Here: Firstly, we use the `ddiscrete` function to create a discrete
+probability function for the biased coin. Secondly, we allow zeros in
+the final probabilities. And thirdly, we experiment with different
+resolutions by specifying different units.
+
+Hints: - We can use the `ddiscrete` function with the biased coin
+probabilities. - Set `zero = TRUE` to allow zeros in the final
+probabilities. - Experiment with different units, for example,
+`unit = 100` and `unit = 1000`.
+
+```{r}
+# Exercise: Modify the discrete probability function for a biased coin
+
+# Given biased coin probabilities (Heads, Tails)
+biased_coin_prob <- c(0.8, 0.2, 0, 0, 0, 0)
+
+# 1. Create a discrete probability function for the biased coin
+biased_coin_fun <- ddiscrete(biased_coin_prob)
+print(biased_coin_fun)
+
+# 2. Create a modified discrete probability function allowing zeros
+modified_coin_fun <- ddiscrete(biased_coin_prob, zero = TRUE)
+print(modified_coin_fun)
+
+# 3. Experiment with different resolutions (units)
+unit_100 <- ddiscrete(biased_coin_prob, unit = 100)
+unit_1000 <- ddiscrete(biased_coin_prob, unit = 1000)
+print(unit_100)
+print(unit_1000)
+```
+
+This code performs the exercise steps, creating the original biased coin
+probability function, a modified version allowing zeros, and
+experimenting with different resolutions (units).
+
+### `ddiscrete2`
+
+`ddiscrete2` generates a finite two-dimensional discrete probability
+distribution. 
+
+The generation has two steps:
+
+1.  Generate two marginal finite two-dimensional discrete probability
+    distributions. Based on this a joint probability for two independent
+    distributions is generated.
+2.  Define target measure for association and target value for the
+    association for the joint distribution.
+
+The current available association measure are:
+
+-   `nom.cc`: (corrected) contingency coefficient
+-   `nom.cramer`: Cramer's V or Phi
+-   `ord.spearman`: Spearman's rank correlation
+-   `ord.kendall`: Kendall's rank correlation
+
+```{r}
+r <- ddiscrete(6)
+c <- ddiscrete(6)
+ddiscrete2(r, c)
+ddiscrete2(r, c, FUN=nom.cc, target=0.4)
+ddiscrete2(r, c, FUN=nom.cc, target=1)
+```
+
+The units are determined as units of `r` multiplied with the units of
+`c`. Since a iterative process is used the parameter `maxit` is set to
+500. If the attribute `iterations` is equal to `maxit` then the
+iterative process has not been finished. The attribute `target` gives
+the association value obtained.
+
+### `is.prob`
+
+The function `is.prob` serves the purpose of verifying whether a given
+numeric value `x` lies within the bounds of an open or closed interval
+defined by specified minimum (`min`) and maximum (`max`) values. By
+default, the function is configured to check if `x` falls within the
+standard open interval (0, 1), often associated with probability values.
+
+```{r}
+is.prob(runif(1))
+```
+
+In this case, the `runif(1)` generates a random numeric value between 0
+and 1, and the `is.prob` function confirms that the generated value
+indeed falls within the standard open interval (0, 1). The result, in
+this instance, is `TRUE`. The function is particularly useful for
+scenarios where it is essential to ascertain whether a given numeric
+value is within the expected range, such as verifying whether a number
+represents a valid probability within the unit interval (0, 1). The
+default settings of the function align with the typical interval used
+for probabilities, facilitating a straightforward validation process.
+
+### `pprobability`
+
+The `pprobability` function is designed to facilitate the generation and
+estimation of polynomials for discrete random variables. This versatile
+function allows us to construct polynomials, estimate both least squares
+and maximum likelihood solutions, and provides flexibility in specifying
+various parameters.
+
+```{r}
+y <- pprobability(0:2, coef=seq(-2, 2, by=0.1))
+str(y)
+```
+
+The `pprobability` function, when called with the arguments
+`pprobability(0:2, coef = seq(-2, 2, by = 0.1))`, performs the
+following:
+
+1.  Generated Polynomials:
+    -   Three linear polynomials are generated based on the user-defined
+        coefficients. The coefficients are sampled from the sequence
+        `-2` to `2` in increments of `0.1`. Each polynomial corresponds
+        to a value in the discrete random variable `0:2`.
+2.  Estimated Polynomial:
+    -   The estimated polynomial is the sum of the generated
+        polynomials.
+3.  Values of the Random Variable:
+    -   The values of the discrete random variable: 0, 1, 2.
+4.  Sample Structure:
+    -   The sample structure represents the frequency of each value in
+        the random variable. In this case, each value occurs once
+        (`c(0, 1, 2)`).
+5.  Least Squares Results:
+    -   The least squares method is applied to estimate a polynomial.
+        The results include the estimated polynomial, its degree, and
+        coefficients.
+6.  Maximum Likelihood Results:
+    -   The maximum likelihood method is applied to estimate a
+        polynomial. The results include the estimated polynomial, its
+        degree, and coefficients.
+
+The purpose of this function call is to generate and estimate
+polynomials for a discrete random variable (`0:2`) with a specified set
+of coefficients. The user-supplied coefficients (`seq(-2, 2, by = 0.1)`)
+influence the shape and characteristics of the generated polynomials.
+Both the least squares and maximum likelihood methods are used to
+estimate the polynomial parameters based on the generated data.
+
+### `prob`
+
+Computes the probability for an interval between `min` and `max` (`max`
+included, `min` excluded).
+
+```{r}
+# Compute the probability for an interval in a uniform distribution
+d <- distribution("unif", min=1, max=7)
+prob(d)
+```
+
+## Simple Linear Regression
+
+### `lm1_data`
+
+This function is designed to create data suitable for performing a
+simple linear regression with a predefined correlation coefficient. It
+accepts various parameters, including the desired correlation, the
+number of squares to decompose, and other options for data manipulation
+and scaling.
+
+The steps the function performs are as follows:
+
+1.  Generate `x` and `y` data so that the sum of squares of the values
+    equals `n` and the sum of values equals 0 for both `x` and `y`.
+
+2.  Re-scale the data using user-defined center and scale values.
+
+3.  Conduct a simple linear regression analysis on the transformed data,
+    allowing users to explore the relationship between `x` and `y` with
+    the specified correlation.
+
+```{r}
+n     <- sample(4:8, 1)
+lm1   <- lm1_data(0.4, nmax=n, xsos=sos100)
+print(lm1)
+```
+
+### `lmr_data`
+
+The `lmr_data` function in R serves the purpose of generating data
+suitable for conducting a simple linear regression analysis. 
+
+Arguments of the function include:
+
+- `xr` and `yr`: The ranges for `x` and `y` values can be defined,
+allowing for controlled data generation. 
+
+- `n`: This parameter specifies the number of observations to create. 
+
+- `r`: If desired, a
+target correlation coefficient can be specified. If not provided, the function defaults to a zero correlation. 
+
+- `digits`: There is the option to set the precision for rounding `x` and `y` values individually. 
+
+Additional parameters can be passed to the function, which are further used in the underlying "cor_data" function.
+
+The function returns an `lm` object, which includes various components
+such as the generated `x` and `y` values, sums, means, variations,
+covariance, correlation, and the coefficients of a linear regression
+model.
+
+```{r}
+n   <- sample(c(4,5,8,10),1)
+lmr <- lmr_data(c(1,3), c(2,8), n=n, r=sample(seq(0.1, 0.9, by=0.05), 1))
+print(lmr)
+```
+
+## Tables
+
+### `incomplete_table`
+
+The `incomplete_table` function is designed to complete a relative
+contingency table with missing values in such a way that the overall
+table entries can be recomputed. If a solution cannot be found, the
+function will generate an error.
+
+Consider a relative contingency table represented by the matrix `tab`,
+which has some missing values. 7 missing values must be filled in order to
+make the table computationally complete.
+
+```{r}
+tab <- rbind(c(0.02, 0.04, 0.34), c(0.02, 0.28, 0.3))
+result <- incomplete_table(tab, 7)
+print(result)
+# Here column no. 4 and row no. 3 constitute the summaries of their respective columns and rows.
+```
+
+Additionally, the function provides information about the filled-in
+values in the `fillin` attribute and the fully reconstructed table in
+the `full` attribute. The `fillin` matrix indicates which cells were
+filled and corresponds to the missing values in the incomplete table.
+The `full` matrix is the complete contingency table with all missing
+values filled.
+
+```{r}
+# attr(,"fillin")
+#      [,1] [,2]
+# [1,]    2    2
+# [2,]    2    2
+# [3,]    4    4
+# [4,]    1    1
+# [5,]    3    3
+# [6,]    3    3
+# [7,]    1    1
+```
+
+In summary, the `incomplete_table` function helps to impute missing
+values in a relative contingency table, ensuring that the resulting
+table remains consistent and computationally valid.
+
+```{r}
+#  attr(,"full")
+#      [,1] [,2] [,3] [,4]
+# [1,] 0.02 0.04 0.34  0.4
+# [2,] 0.02 0.28 0.30  0.6
+# [3,] 0.04 0.32 0.64  1.0
+```
+
+### `table_data`
+
+The `table_data` function is designed to generate a frequency table
+where each entry can be expressed in the form
+$2^{p_{ij}} \times 5^{q_{ij}}$. The function enforces the constraints
+$p_{ij} < m_2$ and $q_{ij} < m_5$. In the event that the algorithm fails
+to find a solution, an error is raised, prompting us to consider
+increasing the `unit` parameter for a more refined search. Once a valid
+table is identified, normalization is performed by dividing all entries
+by an appropriate factor to maintain integer values. Subsequently, a
+random multiplier in the format $2^p \times 5^5$ is selected, ensuring
+that the sum of the entries remains less than or equal to the specified
+limit `n`.
+
+```{r}
+# Generate a frequency table with 4 rows and 3 columns
+generated_table <- table_data(nrow = 4, ncol = 3, unit = 20, n = 150, maxit = 5000)
+
+# Display the generated frequency table
+print(generated_table)
+```
+
+In this example: - The `table_data` function is applied to create a
+frequency table with 4 rows and 3 columns.
+
+-   The `unit` parameter is set to 20, influencing the granularity of
+    the search for a valid table.
+
+-   The `n` parameter is set to 150, indicating the maximum sum of
+    entries.
+
+-   The resulting frequency table, denoted as `generated_table`, adheres
+    to the conditions specified by the function, and all entries can be
+    expressed in the form $2^{p_{ij}} \times 5^{q_{ij}}$.
+
+## Tests
+
+### `proptests`, `proptest_data` and `proptest_num`
+
+-   `proptests`
+
+The `proptests` function systematically explores various modifications
+of the input parameters for `proptest` to generate a comprehensive set
+of proportion tests. If the `hyperloop` parameter is not specified, it
+will result in the generation of several hundred tests. The function
+returns a list of different tests, with the first element being the
+original `proptest` result. If only a specific element of a `proptest`
+result is of interest, providing the name of the element in `elem` will
+return all `proptests` where the specified element is different.
+
+```{r}
+# Set up a base proportion test
+n <- 150
+x <- sum(runif(n) < 0.6)
+basetest <- proptest_num(x = x, n = n)
+
+# Generate all different tests
+all_tests <- proptests(basetest, hyperloop = TRUE)
+str(all_tests)
+
+# Generate all different random sampling functions
+x_functions <- proptests(basetest, elem = "X", hyperloop = TRUE)
+str(x_functions)
+```
+
+In this example, a base proportion test (`basetest`) is created using a
+sample size (`n`) and the number of successes (`x`). The `proptests`
+function is then used to explore various modifications of the input
+parameters, generating all different tests in the first case and all
+different random sampling functions in the second case.
+
+-   `proptest_data`
+
+Generates data for a binomial test based on specified test properties.
+This function is particularly useful for simulating scenarios and
+conducting binomial tests under different conditions.
+
+```{r}
+# Generate binomial test data with default settings
+data_d <- proptest_data()
+
+# Generate binomial test data with custom settings
+data_c <- proptest_data(            
+  size = 20:50,                            # Vector of sample sizes  
+  prob = seq(0.1, 0.9, by = 0.2),          # Vector of probabilities 
+  reject = FALSE,                          # Determines whether the generated data leads to a rejection of the null hypothesis
+  alternative = "less",                    # Specifies the alternative hypothesis, must be "less" or "greater"
+  alpha = 0.05,                            # Vector of significance levels
+  norm.approx = TRUE,                      # Specifies whether a normal approximation should be used 
+  maxit = 500                              # Maximum number of trials
+)
+str(data_c)
+```
+
+-   `proptest_num`
+
+Computes results for a test on proportions using either
+`stats::binom.test()` or a normal approximation without continuity
+correction. The function accepts named parameters or an argument list
+with parameters.
+
+-   x: Number of successes.
+-   n: Sample size (default: `sd(x)`).
+-   pi0: True value of the proportion (default: 0.5).
+-   alternative: A string specifying the alternative hypothesis
+    (default: "two.sided"; "greater" or "less" can be used).
+-   alpha: Significance level (default: 0.05).
+-   binom2norm: Can the binomial distribution be approximated by a
+    normal distribution (default: NA = use `binom2norm` function).
+
+The results may differ from `stats::binom.test()` as `proptest_num` is
+designed for hand-computed binomial tests. The p-value computed by
+`stats::binom.test` may not be reliable.
+
+```{r}
+# Example with default parameters
+n <- 100
+x <- sum(runif(n) < 0.4)
+result <- proptest_num(x = x, n = n)
+str(result)
+```
+
+In this example, the `proptest_num` function is used to compute results
+for a binomial test with specified parameters. The function returns a
+list of relevant values, including test statistics, critical values,
+acceptance intervals, and p-values.
+
+### `ttests`, `ttest_data` and `ttest_num`
+
+The `ttest_data` function generates simulated data tailored for a t-test
+for a single mean, considering specified test properties. This
+facilitates the exploration of various scenarios and the evaluation of
+statistical hypotheses related to the mean.
+
+The `ttest_data` function consists of the following arguments:
+
+-   size: a numeric vector specifying sample sizes to be generated,
+    calculated as squares of integers ranging from 3 to 20.
+
+-   mean: a numeric vector defining potential mean values for the
+    simulated data, ranging from -5 to 5.
+
+-   sd: a numeric vector determining standard deviations for the
+    generated data, with values ranging from 0.1 to 1 in increments of
+    0.1.
+
+-   reject: a logical vector that determines whether the generated
+    values of variable x should result in the rejection of the null
+    hypothesis (default is TRUE). If set to NA, this condition will be
+    disregarded.
+
+-   alternative: a character vector specifying the alternative
+    hypothesis for the t-test, with options for "two.sided," "less," or
+    "greater."
+
+-   alpha: a numeric vector containing significance levels for
+    hypothesis testing, including common values such as 0.01, 0.05, and
+    0.1.
+
+-   z: a numeric vector defining quantiles for the standard normal
+    distribution, used in hypothesis testing; ranges from -4.49 to 4.49
+    with increments of 0.01.
+
+-   use.sigma: a logical value indicating whether the standard deviation
+    (`sigma`) should be used in generating data; default is `TRUE`.
+
+```{r}
+# Generate t-test data 
+ttest_data_scenario1 <- ttest_data(
+  size = c(25, 64, 121),
+  mean = c(0, 2, -2),
+  sd = c(0.5, 0.7, 1),
+  reject = TRUE,  # Rejection condition
+  alternative = "two.sided",
+  alpha = c(0.01, 0.05, 0.1),
+  z = seq(-3.49, 3.49, by = 0.01),
+  use.sigma = TRUE
+)
+```
+
+In summary, this example represents a situation where we are generating
+t-test data for three different sample sizes and mean values, with
+specific rejection conditions. The generated data is tailored for
+hypothesis testing with a two-sided alternative hypothesis and varying
+significance levels. The condition reject = TRUE implies that the null
+hypothesis will be rejected based on the generated data.
+
+-   `ttest_num`
+
+Is a function that helps with the computation of all the results for a
+t-test. We are testing this function with the following exercise that is
+intended to produce a one-sample t-test. The exercise is meant to assess
+whether a new variety of butter is worth launching, based on customers'
+willingness to pay a certain price.
+
+```{r}
+sigma  <- sample(5:30, size=1)
+ttest  <- ttest_num(n           = sample((4:8)^2, size=1), 
+                    mu0         = sample(seq(1.5, 3, by=0.1)+0.5, size=1),
+                    mean        = sample(seq(1.5, 3, by=0.1), size=1),
+                    alternative = 'greater',
+                    sd          =  sample((sigma-3:sigma+3), size=1)/10,
+                    sigma       = sigma/10,   
+                    norm        = TRUE)
+str(ttest)
+```
+
+The exercise is set in the context of a butter manufacturer considering
+the launch of a new butter variety. To determine whether it's worth
+launching, the manufacturer wants to know if customers are willing to
+pay at least a specific price per pack of the new butter. This is why we
+use the `ttest_num` function, in order to make an informed decision with
+the help of a t-test.
+
+`ttest_num` computes all the results of the t-test as we can observe:
+
+-   `n`: The sample size, representing the number of customers randomly
+    selected for the survey.
+
+-   `mu0`: The price the manufacturer intends to test as its objective.
+
+-   `mean`: The average spending level of the sample's respondents.
+
+-   `alternative`: The alternative hypothesis, set to 'greater,'
+    indicating that the manufacturer is interested in testing whether
+    customers are willing to pay more than the target price.
+
+-   `sd`: The sample standard deviation, which reflects the range of
+    prices that customers are ready to accept.
+
+-   `sigma`: The population standard deviation, representing the
+    standard deviation of prices in the entire population (unknown by
+    default).
+
+-   `alpha`: The significance level (set to 0.05).
+
+-   `ttests`
+
+The `ttests` function systematically explores various modifications of
+the input parameters for t-tests, generating a comprehensive set of
+possible t-tests. Details regarding the specific parameter values
+employed can be found below. It is important to note that omitting the
+hyperloop parameter may result in the generation of approximately 5000
+t-tests. The function returns only distinct t-tests, with the primary
+t-test stored as the first element. If there is interest in a specific
+element of the t-test, users can specify it using the elem parameter,
+and the function will return all t-tests where that particular element
+differs.
+
+```{r}
+# Generate a base t-test
+base_ttest <- ttest_num(mean = 1.2, sd = 0.8, n = 30, sigma = 1)
+
+# Vary the parameters for hyperloop
+hyperloop_variation <- list(
+  mean = c(base_ttest$mean - 0.5, base_ttest$mean, base_ttest$mean + 0.5),
+  n = c(20, 30, 40),
+  sd = c(0.7, 0.8, 0.9)
+)
+
+# Obtain different t-tests with varied parameters
+different_ttests <- ttests(base_ttest, hyperloop = hyperloop_variation)
+
+# Extract t-tests where the element "Conf.Int" differs
+confint_differing_ttests <- ttests(base_ttest, "Conf.Int", hyperloop = hyperloop_variation)
+```
+
+-   We start by generating a base t-test (`base_ttest`) with specified
+    parameters such as mean, standard deviation, sample size, and
+    population standard deviation using the `ttest_num` function.
+
+-   The `hyperloop_variation` parameter is utilized to systematically
+    vary the mean, sample size, and standard deviation in different
+    scenarios.
+
+-   The `ttests` function is then employed to generate distinct t-tests
+    by modifying the base t-test with the specified variations. The
+    resulting t-tests are stored in the variable `different_ttests`.
+
+-   Additionally, the function is called again, this time focusing on
+    the specific element "Conf.Int," and returning t-tests where this
+    element differs. The results are stored in the variable
+    `confint_differing_ttests`.
+
+This example demonstrates how the `ttests` function can be applied to
+explore various t-tests by systematically varying parameters, and it
+highlights the flexibility of extracting t-tests based on specific
+elements of interest.
+
+# Mathematical Computations
+
+## Intervals
+
+### `dbl`, `pos` and `neg`
+
+The `pos`, `neg`, and `dbl` functions are designed to generate intervals
+based on powers of ten.
+
+-   `pos(pow)`: Generates positive intervals based on powers of ten.
+-   `neg(pow)`: Generates negative intervals based on powers of ten.
+-   `dbl(pow)`: Generates intervals that include both positive and
+    negative values based on powers of ten.
+
+```{r}
+# Generate double intervals 
+result_1 <- dbl(2)
+print(result_1)
+
+# Generate positive intervals
+result_2 <- pos(3)
+print(result_2)
+
+# Generate negative intervals
+result_3 <- neg(3)
+print(result_3)
+```
+
+## Polynomials
+
+### `monomial`
+
+The `monomial` function constructs a polynomial in the form of
+$c \cdot x^d$, where $c$ is the coefficient and $d$ is the degree. The
+default values are set to create a monomial of degree 1 with a
+coefficient of 1.
+
+```{r}
+degree <- 3
+coefficient <- 2
+
+# Generate a monomial with the specified degree and coefficient
+result_monomial <- monomial(3, 2)
+cat("Monomial:", result_monomial, "\n")
+```
+
+In this example, the `monomial` function is utilized to create a
+monomial with a degree of 3 and a coefficient of 2. The resulting
+monomial $2 \cdot x^3$ is then printed using the `cat` function.
+
+### `pminimum`
+
+The `pminimum` function calculates the minimum value of a polynomial
+within a specified interval $[lower, upper]$. It evaluates the
+polynomial at critical points within the given interval, including the
+interval's boundaries, and returns the minimum value.
+
+```{r}
+# Creating a polynomial and finding the minimum within a specified range
+custom_polynomial <- polynomial(c(2, -1, 4, -2))  # Represents 2x^3 - x^2 + 4x - 2
+
+# Finding the minimum of the polynomial within the range [-1, 2]
+minimum_result <- pminimum(custom_polynomial, -1, 2)
+
+# Displaying the result
+print(minimum_result)
+```
+
+In this example, a custom polynomial `custom_polynomial` is created
+using the `polynomial` function with coefficients `c(2, -1, 4, -2)`,
+representing the polynomial $2x^3 - x^2 + 4x - 2$. The `pminimum`
+function is then applied to find the minimum value of the polynomial
+within the specified range $[-1, 2]$. The result is stored in
+`minimum_result`, and represents the minimum value of the polynomial
+within the given range.
+
+## Rational Approximation
+
+### `fractions` and `is_terminal`
+
+To overcome the rounding problem there is a simple approach: try to use
+(terminal) fractions. A terminal fraction generates a number with a
+finite number of digits, for example $\frac{1}{10}=0.1$. The command
+`fractions` calls simply `MASS::fractions()` to avoid
+explicitly loading the library `MASS`. The result of calling fractions
+has an attribute `fracs` which contains a (approximate) fraction as
+$\frac{numerator}{denominator}$ representation.
+
+```{r}
+x <- c(1/5, 1/6)
+x
+fractions(x)
+str(fractions(x))
+```
+
+Therefore, `is_terminal` tests if all entries are terminal fractions
+which means the denominators must be dividable by two and five only.
+
+```{r}
+x <- c(1/5, 1/6)
+is_terminal(x)
+```
+
+Unfortunately, we use a decimal numeral system limiting the number
+possible of denominators which lead to terminal numbers; the ancient
+babylonian cultures using a sexagesimal numeral system had a larger
+number of denominators which would lead to terminal numbers.
+
+-   `fractions`
+
+`fractions` is a copy of `MASS::fractions` to compute from a numeric
+values fractions.
+
+```{r}
+# Create a 5x5 matrix with random values
+Y <- matrix(runif(25), 5, 5)
+
+# Display the matrix as fractions using the `fractions` function
+fractions(Y)
+
+# Perform matrix operations and display the results as fractions
+fractions(solve(Y, Y/5))
+fractions(solve(Y, Y/5) + 1)
+```
+
+## Solving Equations
+
+### `equal`
+
+Compares two numeric values if they are equal given a tolerance
+(default: 1e-6).
+
+```{r}
+x <- pi
+y <- pi+1e-4
+equal(x, y)
+equal(x, y, tol=1e-3)
+```
+
+### `equations`
+
+The equations function is used to define a set of equations using the
+formula interface. It also provides a LaTeX representation of the
+formulae. The resulting equations object includes information about the
+type of equation, its value, associated text, and the interval if
+applicable.
+
+```{r}
+# Defining a system of economics equations
+
+econ_eq <- equations(
+  Y ~ C + I + G + (X - M), "Y = C + I + G + (X - M)",
+  C ~ c0 + c1*YD, "C = c_0 + c_1\\cdot YD",
+  I ~ I0 - i1*r + i2*Y, "I = I_0 - i_1\\cdot r + i_2\\cdot Y",
+  YD ~ Y - T, "YD = Y - T",
+  T ~ t0 + t1*Y, "T = t_0 + t_1\\cdot Y",
+  M ~ m0 + m1*Y, "M = m_0 + m_1\\cdot Y",
+  X ~ x0 + x1*Y, "X = x_0 + x_1\\cdot Y",
+  r ~ r0, "r = r_0"
+)
+print(econ_eq)
+```
+
+In this example, the equations represent components of the Keynesian
+aggregate expenditure model, where $Y$ is the national income, $C$ is
+consumption, $I$ is investment, $G$ is government spending, $X$ is
+exports, and $M$ is imports. The model includes consumption functions,
+investment functions, taxation, and trade balance.
+
+### `print.equations`
+
+The `print.equations` function serves as an S3 method designed for
+displaying an equations object containing equations and associated
+variables. Internally, it generates a data frame, providing a clear
+representation of the equations and their dependencies.
+
+```{r}
+# The equations describe the formulae for an confidence interval of the mean
+e <- equations(o~x+c*s/sqrt(n), "v_o=\\bar{x}+c\\cdot\\frac{s^2}{n}",
+               u~x-c*s/sqrt(n), "v_u=\\bar{x}-c\\cdot\\frac{s^2}{n}",
+               e~c*s/sqrt(n),   "e  =c\\cdot\\frac{s^2}{\\sqrt{n}}",
+               l~2*e,           "l  =2\\cdot e"
+               )
+print(e)
+```
+
+In this example, a set of equations is defined to describe the formulae
+for a confidence interval of the mean. Let's break down the code and
+understand each part:
+
+-   The `equations` function is used to create an equations object
+    (`e`).
+-   Four equations are defined in terms of variables (`o`, `u`, `e`,
+    `l`) and involve the variables `x`, `c`, `s`, and `n`.
+-   Each equation is provided in a formula style, representing a
+    statistical formula related to a confidence interval of the mean.
+-   The `print` function is used to display the equations object (`e`).
+-   The output presents the equations and associated variables in a
+    structured format. This example demonstrates how the `equations`
+    function can be utilized to create a set of equations representing
+    statistical formulas.
+
+### `variables`
+
+Is a function that allows the configuration of values, LaTeX
+representations, and solution intervals for variables within an
+`equations` object. The first argument must be the `equations` object,
+followed by named parameters to specify values, intervals, and LaTeX
+representations for specific variables. This function enables the
+modification of the `equations` object to incorporate specific variable
+information.
+
+```{r}
+# The equations describe the formulae for a confidence interval of the mean
+e <- equations(o~x+c*s/sqrt(n), "v_o=\\bar{x}+c\\cdot\\frac{s^2}{n}", 
+               u~x-c*s/sqrt(n), "v_u=\\bar{x}-c\\cdot\\frac{s^2}{n}", 
+               e~c*s/sqrt(n),   "e  =c\\cdot\\frac{s^2}{\\sqrt{n}}",
+               l~2*e,           "l  =2\\cdot e"                   
+               )
+
+# Set variable values, intervals, and LaTeX representations
+e <- variables(e, 
+               x=0,    "\\bar{x}",
+               c=2.58, dbl(2), 
+               s=1,    pos(5), "s^2",
+               n=25,   pos(5),
+               l=pos(5), 
+               e=pos(5),
+               u="v_u", o="v_o")
+
+# Print the modified equations object
+print(e)
+```
+
+The provided R example involves creating a set of equations representing
+the formulae for a confidence interval of the mean, including variables
+such as `o`, `u`, `e`, and `l`. Subsequently, the `variables` function
+is applied to set specific values, intervals, and LaTeX representations
+for these variables. For instance, `x` is assigned a value of 0, `c` is
+set to 2.58 with an interval of [1, 2], and the LaTeX representation for
+`s` is defined as "s\^2". The modified equations object is then printed,
+showcasing the customized variable settings and representations. This
+approach demonstrates efficient manipulation and customization of
+mathematical expressions within the R environment.
+
+### `num_solve`
+
+The `num_solve` function is designed to compute the value of a target
+variable in a set of equations. The equations, representing
+relationships between variables, are transformed into root-finding
+problems, and the function attempts to find the roots using the
+`stats::uniroot()` function. If successful, the computed value of the
+target variable is returned; otherwise, `numeric(0)` is returned. If the
+target variable is not specified (`target==''`), the function returns
+all computed values and steps. The `compute` attribute contains a data
+frame with information about the computation steps.
+
+```{r}
+# The equations describe the formulae for an confidence interval of the mean
+e <- equations(o~x+c*s/sqrt(n), "v_o=\\bar{x}+c\\cdot\\frac{s^2}{n}",
+               u~x-c*s/sqrt(n), "v_u=\\bar{x}-c\\cdot\\frac{s^2}{n}",
+               e~c*s/sqrt(n),   "e  =c\\cdot\\frac{s^2}{\\sqrt{n}}",
+               l~2*e,           "l  =2\\cdot e"
+               )
+# Setting variables and their values
+e <- variables(e, x = 0, c = 2.58, s = 1, n = 25, l = pos(5), e = pos(5), u = "v_u", o = "v_o")
+
+# Finding confidence interval length ('l')
+ns <- num_solve('l', e)
+
+# Computing all possible values
+ns <- num_solve('', e)
+print(ns)
+```
+
+In this example, the function is used to find the confidence interval
+length (`l`) based on a set of equations and variable values. Here, the
+function is also used to compute all possible values for the variables
+specified in the equations. In both cases, the resulting `ns` object
+contains information about the computation, including the values of
+variables and computation steps. The `compute` attribute provides a data
+frame with details about each variable's value in the computation
+process.
+
+## Value and Extremes Analysis
+
+### `extremes`
+
+Calculates the extrema of real values, including minima, maxima, and
+saddle points, for a univariate polynomial. The computation can be
+tailored to focus on specific categories of extrema.
+
+```{r}
+p <- polynomial(c(0,0,0,1))
+extremes(p)
+```
+
+### `nearest_arg`
+
+`nearest_arg` is a function designed to identify the closest candidate
+value for each element in the input argument (`arg`). This function
+serves as an enhanced alternative to the base R function `match.arg`,
+offering improved tolerance for potential typographical errors. However,
+it's important to note that while `nearest_arg` enhances error
+resilience, detecting an incorrect choice may be challenging if one
+occurs.
+
+```{r}
+# Sample usage of nearest_arg
+valid_colors <- c("red", "blue", "green", "yellow", "orange")
+
+# Input color names with potential typos
+input_colors <- c("rad", "blu", "grien", "yello", "ornge")
+
+# Applying nearest_arg to find the closest valid color names
+result_colors <- nearest_arg(input_colors, valid_colors)
+
+# Displaying the result
+cat("Input Colors:", input_colors)
+cat("Nearest Valid Colors:", result_colors)
+```
+
+-   `valid_colors`: A vector representing the valid color names.
+-   `input_colors`: A vector containing color names with potential typos
+    or deviations.
+-   `result_colors`: The output of `nearest_arg` applied to
+    `input_colors` and `valid_colors`.
+
+In this example, `nearest_arg` is utilized to identify the nearest valid
+color name for each input color. The function demonstrates its
+effectiveness in handling potential typos or variations in the input
+color names. The result provides a vector of the nearest valid color
+names, showcasing how `nearest_arg` enhances error tolerance and
+accurately identifies the closest valid candidates in a given set.
+
+### `unique_max`
+
+Checks if the numeric vector `x` possesses a singular maximum. This
+function evaluates whether the discrepancy between the largest and
+second-largest values in `x` is greater than a specified minimum
+distance, `tol`.
+
+```{r}
+# Generate a vector with a unique maximum
+vec_unique_max <- c(3, 7, 5, 2, 8, 6, 4)
+
+# Check if vec_unique_max has a unique maximum with the default tolerance (1e-3)
+result_default_tol <- unique_max(vec_unique_max)
+
+# Check if vec_unique_max has a unique maximum with a larger tolerance (1)
+result_large_tol <- unique_max(vec_unique_max, tol = 1)
+
+# Print the results
+cat("Default Tolerance Result:", result_default_tol, "\n")
+cat("Large Tolerance Result:", result_large_tol, "\n")
+```
+
+# Exercise Generation
+
+## Structured Exercise Development
+
+### `all_different`
+
+For solutions in multiple choice exercises you want to ensure that the
+numerical results are not too near to each other. Therefore,
+`all_different` checks if the differences between the entries in `obj`
+are larger than some given value `tol`.
+
+```{r}
+x <- runif(20)
+all_different(x, 1)    # Minimal distance is at least 1
+all_different(x, 1e-4) # Minimal distance is at least 0.0001
+```
+
+### `calledBy`
+
+Checks if the call stack, obtained from `base::sys.calls`, contains a
+call from the specified function (`fun`).
+
+```{r}
+# Define functions funa and funb
+funb <- function() { calledBy('funa') }
+funa <- function() { funb() }
+
+# Call funa and check if it is called by funb
+result <- funa()
+
+# Display the result
+str(result)
+```
+
+### `exercise`
+
+The `exercise` function is used to create and modify a data structure
+for exercise data. `exer` represents an existing exercise data structure
+or NULL to create a new one.
+
+```{r}
+# Create a new exercise data structure
+exer <- exercise()
+
+# Add a parameter 'x' to the exercise data structure
+exer <- exercise(exer, x = 3)
+str(exer)
+```
+
+## Solution Handling and Result Formatting
+
+### `solutions`
+
+-   `sol_num` generates a numerical solution object for a given numeric
+    value. The function automatically determines tolerance if not
+    provided, considering the range of values. Additionally, it captures
+    relevant information about the source context, including the
+    script's name or file path.
+
+```{r}
+# Example 1: Calculating a solution with default parameters
+s <- sol_num(sqrt(2))
+str(s)
+# Example 2: Numeric solution with tolerance and rounding
+sol_num(pi, tol=0.001, digits=3)
+```
+
+-   `sol_int` extends the functionality of the `sol_num` function by
+    rounding the given numeric value to the nearest integer. It
+    generates an integer solution object with optional parameters for
+    tolerance and rounding digits.
+
+```{r}
+# Example: Creating an integer solution
+integer_solution <- sol_int(7.89, tol=0.01, digits=2)
+str(integer_solution)
+```
+
+-   `sol_mc` generates a multiple-choice solution object by combining
+    false (x) and true (y) answers. The number of false and true answers
+    to include can be altered, shuffling options can be specified, and a
+    default option when none of the choices apply can be provided. The
+    resulting solution object captures the answer list, solution
+    indicators, and relevant source context information.
+
+```{r}
+# Example: Creating a multiple-choice solution for a biology quiz
+plants <- c("Moss", "Fern", "Pine", "Rose", "Tulip")
+flowering_plants <- c("Rose", "Tulip")
+non_flowering_plants <- setdiff(plants, flowering_plants)
+
+s_plants <- sol_mc(non_flowering_plants, flowering_plants, sample=c(2, 2), shuffle=FALSE, none="None of the above")
+str(s_plants)
+```
+
+-   `sol_ans` extracts the answer list from a multiple-choice solution
+    object created using the `sol_mc` function. It facilitates the
+    presentation of correct and potential answer choices in various
+    formats, including LaTeX for exams2pdf compatibility.
+
+```{r}
+# Example: Extracting correct answers from a biology quiz
+s <- sol_mc(c("Oak", "Maple", "Rose"), c("Tulip", "Sunflower"), sample=c(2, 1), none="No valid options")
+sol_ans(s)
+```
+
+-   `sol_tf` extracts the solution list (True or False) from a
+    multiple-choice solution object created using the `sol_mc` function.
+    It facilitates the presentation of binary representations of correct
+    and incorrect choices in various formats, including LaTeX for
+    exams2pdf compatibility.
+
+```{r}
+# Example: Extracting True/False solutions from a chemistry quiz
+s <- sol_mc(c("Copper", "Silver", "Gold"), c("Oxygen", "Carbon"), sample=c(2, 1), none="None of the above")
+sol_tf(s)
+```
+
+-   `sol_info` generates a Meta-Information block for a given solution
+    object. It provides additional context and details about the
+    solution, including its type, solution values, tolerance, and source
+    context.
+
+```{r}
+# Example: Displaying Meta-Information for a statistical analysis
+stat_analysis <- sol_num(mean(c(5, 8, 12, 15, 18)), tol = 0.01, digits = 2)
+info_stat <- sol_info(stat_analysis)
+cat(info_stat)
+```
+
+### `int_result` and `num_result`
+
+`num_result` is a function that generates a list containing various
+elements for numeric results. The key components of this list include:
+
+-   `x`: The original numeric values.
+-   `fx`: The rounded values with the `exams::fmt()` function,
+    represented as characters.
+-   `tolerance`: The specified tolerance for rounding.
+-   `digits`: The number of digits used for rounding.
+
+It's important to note that `x` can contain more than one numeric value,
+and in such cases, ensure using `...$x[1]` for numeric exercises.
+
+If `digits` are not explicitly provided and `length(x) > 1`, the
+function calculates `ceiling(-log10(min(diff(sort(x)), na.rm=TRUE)))`.
+If `digits` are not provided and `length(x) == 1`, it uses
+`3 + ceiling(-log10(abs(x)))`. If no tolerance is specified,
+`tolmult * 10^(1 - digits)` is employed.
+
+Additionally, the auxiliary function `int_result` can be used when the result is an integer number. It calls
+`num_result(x, 0, 0.1, 1, ...)` with a tolerance of 0.1.
+
+As for the exercise provided, it involves generating random values for
+variables such as `hours`, `lambda`, `busses`, and `border`. The
+exercise utilizes the exponential distribution and aims to create a
+scenario related to waiting times for buses. The `num_result` and
+`int_result` functions are then employed to format and round the results
+appropriately for use in statistical exercises. The overall goal is to
+create a dynamic and varied set of exercises with numerical outcomes
+based on the specified parameters.
+
+```{r}
+# Exercise "Bluthochdruck"
+
+alpha <- sample(c(0.01, 0.02, 0.05, 0.1, 0.2), 1)
+n     <- sample(5:15, 1)
+smean <- 80:160
+ssig  <- 1:50
+ski   <- sample(smean,1)
+sigma <- sample(ssig,1)
+a <- ski-sigma
+b <- ski+sigma
+X <- sample(seq(a,b,1),n,replace=TRUE)
+#part a
+xBar <- round(mean(X))
+s2   <- var(X)
+s2   <- round(s2)
+s    <- round(sqrt(s2),2)
+#part c
+c    <- round(qt(1-alpha/2, n-1), 3)
+v_u  <- xBar - c * sqrt(s2/n)
+v_o  <- xBar + c * sqrt(s2/n)
+dig  <- 1-floor(log10((c-qnorm(1-alpha/2))*sqrt(s2/n)))
+sc   <- num_result(v_u, digits=dig, tolmult=1)
+print(sc)
+```
+
+This example demonstrates how to generate random data, perform
+statistical calculations, and use the `num_result` function to obtain a
+numerical result for a confidence interval. The focus is on rounding
+precision and tolerance. Here the `num_result` function is called with
+the upper confidence limit `v_u`, specifying the desired precision
+(digits) and a tolerance multiplier (`tolmult`).
+
+
+
+
+## File Manipulation and Document Enhancement
+
+### `makekey`
+
+The `makekey` function generates a character key from a vector of
+integers. It takes a numeric vector `index` as input and converts each
+element into a character, creating a comma-separated string
+representation of the indices.
+
+```{r}
+makekey(c(3, 7, 10))
+```
+
+-   The function `makekey` is applied to the numeric vector
+    `c(3, 7, 10)`.
+-   Each numeric value in the vector is converted to a character.
+-   The resulting characters are then joined into a single string,
+    separated by commas.
+-   In this specific example, `makekey(c(3, 7, 10))` generates the key
+    "3, 7, 10".
+
+### `moodle_m2s`
+
+The `moodle_m2s` function addresses a limitation in the `exams` package by
+enabling support for multiple-choice questions with multiple correct
+answers, a feature allowed by Moodle but not directly supported by
+exams. This function processes an XML file created by `exams.forge`,
+specifically adapting the representation of multiple-choice questions:
+
+-   Changes `<single>...</single>` to `<single>true</single>`
+
+-   Adjusts the `fraction` attribute in
+    `<answer fraction="...">...</answer>` tags. If the fraction is less
+    than 0, it is set to zero, and if it's greater than 0, it is set to
+
+    100. 
+
+If the file does not have a .xml extension, .xml is appended. Finally,
+the modified XML code is saved in `newfile`.
+
+```{r}
+# Modifying a Moodle XML file for multiple-choice questions with multiple correct answers
+
+# Example 1: Using moodle_m2s on a specified file
+# Assuming 'my_moodle_file.txt' is the original Moodle XML file
+# original_file <- "my_moodle_file.txt"
+
+# Applying moodle_m2s to modify the XML file
+# modified_file <- moodle_m2s(original_file)
+
+# Displaying the name of the modified XML file
+# cat("Example 1: Modified XML file saved as:", modified_file, "\n")
+
+# Example 2: Using moodle_m2s on a file from the exams.moodle package
+# if (interactive()) {
+# Creating a temporary file with .xml extension
+# newfile <- tempfile(fileext=".xml")
+# Using moodle_m2s on the 'klausur-test.xml' file from the exams.forge package
+# moodle_m2s(system.file("xml", "klausur-test.xml", package="exams.forge"), newfile=newfile)
+
+# Opening the modified XML file for editing with file.edit(newfile) }
+```
+
+In the first example, the `moodle_m2s` function is applied to address
+the limitation in the exams package regarding multiple-choice questions
+with multiple correct answers. The original Moodle XML file is assumed
+to be named `my_moodle_file.txt`. The function processes this file,
+making necessary adjustments such as changing `<single>...</single>` to
+`<single>true</single>`. It also adjusts the fraction attribute in
+`<answer fraction="...">...</answer>` tags, ensuring that it is set to
+zero if less than 0 and set to 100 if greater than 0. The modified XML
+code is then saved in a new file, and the name of the modified XML file
+is printed. It's important to note that the function automatically
+appends `.xml` to the file name if it does not already have a `.xml`
+extension.
+
+The second example demonstrates the interactive use of the `moodle_m2s`
+function. It creates a temporary file with a `.xml` extension and
+applies the function to the `klausur-test.xml` file from the
+`exams.forge` package. The modified XML file is then opened for editing
+using `file.edit`. If run interactively, the modifications made by the function can also be viewed and edited.
+
+
+
+### `spell`
+
+The `spell` function conducts a spell check on RMarkdown files while
+selectively disregarding specified keywords commonly used in the context
+of `exams`. This is achieved through the utilization of the
+`spelling::spell_check_files()` function.
+
+```{r}
+# Perform spell check on an RMarkdown file, ignoring specific keywords
+# spell_result <- spell("path/to/my/file.Rmd")
+
+# Alternatively, perform spell check on multiple files
+# spell_result_multiple <- spell(c("path/to/file1.Rmd", "path/to/file2.Rmd"))
+
+# Display the spell check results
+# print(spell_result)
+```
+
+In this example: - The `spell` function is used to conduct a spell check
+on an RMarkdown file located at "path/to/y/file.Rmd" while ignoring
+specified keywords common in `exams`.
+
+-   Alternatively, the function is applied to multiple files by passing
+    a vector of file paths.
+
+-   The results of the spell check are stored in the `spell_result` and
+    `spell_result_multiple` variables.
+
+# String Manipulation
+
+## Conditional String Output
+
+### `catif`
+
+Calls `cat` if the specified condition (`cond`) is TRUE.
+
+```{r}
+# Call catif with TRUE condition
+catif(TRUE, "PDF")      
+
+# Call catif with FALSE condition
+catif(FALSE, "Moodle")  # There is no output with this condition
+```
+
+### `nosanitize`
+
+The `nosanitize` function allows us to bypass any sanitation procedures
+on character vectors. It is designed for situations where no additional
+sanitization or modification of strings is required, providing us with
+direct access to the original unaltered data.
+
+```{r}
+original_strings <- c("Hello, World!", "<script>alert('Danger!');</script>", "1234567890")
+# Applying nosanitize to preserve original strings
+unsanitized_strings <- nosanitize(original_strings)
+print(unsanitized_strings)
+```
+
+In this example, the `nosanitize` function is used to process a vector
+of strings (`original_strings`) without performing any sanitation.The
+resulting `unsanitized_strings` vector preserves the original content,
+including any potentially unsafe characters or HTML tags.
+
+## Number to String Conversion
+
+### `fcvt`
+
+The `fcvt` function converts a numeric vector to a string containing
+either a floating-point or a fractional number. It is particularly
+useful for representing repeating or recurring decimals as rational
+numbers. The function supports various options for controlling the
+output format.
+
+-   `x`: Numeric vector to be converted.
+-   `nsmall`: Number of decimal places for floating-point numbers.
+-   `plus`: Logical, indicating whether to include a plus sign for
+    positive numbers.
+-   `denom`: Integer controlling the output format:
+    -   If negative, always decimal point numbers are used (default).
+    -   If zero, a mix of decimal point and fractional numbers are used
+        (whichever is shorter).
+    -   If one, fractional numbers are used except for integers.
+    -   If larger than one, the denominator is set to `denom` if
+        possible.
+
+```{r test}
+# Example 1
+x3 <- c((0:16)/8, 1/3)
+fcvt(x3)
+
+# Example 2
+fcvt(x3, denom=0)
+
+# Example 3
+fcvt(x3, denom=1)
+
+# Example 4
+fcvt(x3, denom=8)
+```
+
+### `num2str`
+
+Converts a set of numeric variables to a list of string representations,
+allowing for both decimal and fractional number formats. The function
+takes numeric variables as arguments and an optional denominator for the
+fractional representation. The result is a list where each element
+corresponds to the string representation of a numeric variable.
+
+```{r}
+x <- 1
+str(num2str(x))
+y <- 2
+str(num2str(x, y))
+str(num2str(x, y, z=c(x,y)))
+```
+
+## Quote and Prefix and/or Suffix Manipulation
+
+### `affix`, `unaffix`
+
+-   `affix` adds a specified prefix and/or suffix to a character vector.
+
+```{r}
+random_values <- runif(5)
+new_value <- affix(random_values, prefix = "$", suffix = "$")
+```
+
+-   `unaffix` removes specified prefixes and/or suffixes from a
+    character vector.
+
+```{r}
+random_numbers <- c("$15.3", "$7.9", "$22.6")
+new_numbers <- unaffix(random_numbers, prefix = "$", suffix = "")
+```
+
+### `cdata`, `uncdata`
+
+-   `cdata` adds a \<[CDATA[ prefix and ]]\> suffix to a character
+    vector, ensuring proper encapsulation for XML or HTML data content.
+
+```{r}
+new_data <- c(5.5, 12.3, 8.9)
+cdata_representation <- cdata(new_data)
+```
+
+-   `uncdata` removes the \<[CDATA[ prefix and ]]\> suffix from a
+    character vector, commonly used in XML and HTML processing.
+
+```{r}
+cdata_numbers <- c("<![CDATA[30.5]]>", "<![CDATA[18.2]]>", "<![CDATA[45.7]]>")
+new_numbers <- uncdata(cdata_numbers)
+```
+
+### `bracket`
+
+Adds a ( as prefix and ) as suffix to a (character) vector.
+
+```{r}
+existing_values <- c(10, 20, 30)
+new_values <- bracket(existing_values)
+```
+
+### `math`
+
+Encloses a character vector with the dollar symbol (\$) as both prefix
+and suffix, often used for mathematical expressions.
+
+```{r}
+numeric_vector <- c(3.14, 2.718, 1.618)
+math_representation <- math(numeric_vector)
+```
+
+### `unquote`
+
+Eliminates double quotes as both prefix and suffix from a character
+vector.
+
+```{r}
+quoted_values <- c("\"42.0\"", "\"8.8\"", "\"16.5\"")
+unquoted_values <- unquote(quoted_values)
+```
+
+### `breaks`
+
+Generates a set of breakpoints for a given data vector `x`. The breaks
+can be either equidistant or non-equidistant. If the `width` parameter
+is not specified, it defaults to the first difference of the rounded
+values from `pretty(x)`. The `probs` parameter defines the number of
+quantiles or a vector of probabilities with values in [0, 1]. If the
+`width` is too large, using `probs` may result in equidistant breaks.
+
+```{r}
+# Generate breaks for a random normal distribution
+x <- rnorm(100, mean = 1.8, sd = 0.1)
+breaks(x)
+
+# Generate breaks with specified width for the same distribution
+breaks(x, 0.1)
+
+# Generate quantile-based breaks with specified width for the distribution
+breaks(x, 0.1, probs = 4)
+```
+
+## Vector to String Conversion
+
+### `as_fraction`
+
+Converts numeric values into fractions, optionally in LaTeX format and
+allowing sorting.
+
+```{r}
+x <- round(runif(5), 2)
+as_fraction(x)
+as_fraction(x, latex = TRUE)
+```
+
+### `as_obs`
+
+Creates a string representing observations with optional sorting and
+LaTeX formatting.
+
+```{r}
+# Taken from the exercise "Niederschlag"
+smean <- 250:350
+ssig  <- 1:10
+ski   <- sample(smean, 1)
+sigma <- sample(ssig, 1)
+a <- ski-sigma
+b <- ski+sigma
+repeat{
+  X    <- sample(seq(a,b,1),5,replace=TRUE)
+  xbar <- sum(X)/5
+  if (abs(xbar-round(xbar))<1e-3) break
+}
+#part a
+sumSize = sum(X)
+xBar <- round(xbar,2)
+S2   <- round(var(X), 2)
+sx   <- as_obs(X, last=" und ")
+```
+
+### `as_string`
+
+Converts a vector or list of values into a readable string with
+specified separators.
+
+```{r}
+# Taken from the exercise "Dart 2"
+fields  <- c(6, 13, 4, 18, 1, 20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10)
+N       <- 82
+ind     <- sort(sample(20, 2))
+mname   <- paste0("eines der Felder, die zu den Nummern ", as_string(fields[ind[1]:ind[2]], last=" oder "), " gehören")
+print(mname)
+```
+
+### `as_sum`
+
+Creates a string representation of a sum expression for numeric values.
+
+```{r}
+x <- round(runif(5), 2)
+as_sum(x)
+```
+
+## Miscellaneous Functions
+
+## Function Helper
+
+### `gapply`
+
+The `gapply` function executes a given function (`FUN`) for all
+combinations of parameters specified in the ellipsis (`...`). This
+facilitates grid application, where each combination of parameters is
+applied to the function. The use of `I(.)` allows preventing certain
+elements from being interpreted as grid values. If an error occurs
+during the execution of the function, the corresponding result will not
+be stored, and missing indices may be observed in the returned list.
+
+```{r}
+# Execute 4 function calls: sum(1,3,5:6), sum(1,4,5:6), ..., sum(2,4,5:6)
+gapply("sum", 1:2, 3:4, I(5:6))
+```
+
+## Formatting
+
+### `replace_fmt`
+
+The `replace_fmt` function is designed to substitute names within a text
+with values that are formatted either through the `exams::fmt()`
+function or as strings. This facilitates the integration of formatted
+values or strings into a given text.
+
+```{r}
+# Formatting numeric values with a list specifying precision for each variable, overriding y's precision to 0
+result1 <- replace_fmt("\\frac{x}{y}", x = 2, y = 3, digits = list(2, y = 0))
+
+# Formatting LaTeX expressions as strings
+result1 <- replace_fmt("\\frac{x}{y}", x = "\\\\sum_{i=1}^n x_i", y = "\\\\sum_{i=1}^n y_i")
+```
+
+The first example showcases custom precision for each variable using a
+list, with `y` overridden to have zero digits. The second example
+illustrates the use of LaTeX expressions as strings, incorporating them
+into the formatted LaTeX expression.
+
+# LaTeX and HTML Functions (Multi-Format Rendering Functions)
+
+## Introductory LaTeX Functions
+
+### `answercol`
+
+Customizes LaTeX documents by specifying the number of answer columns
+using the \def\answercol{n} command.
+
+```{r}
+# Set the number of answer columns to 2 in the LaTeX document
+answercol(2)
+```
+
+### `hypothesis_latex`
+
+This function generates a structured data frame to represent test
+hypotheses. The resulting data frame includes various columns:
+
+-   `h0.left`: Represents the left value in the null hypothesis,
+    typically denoted as $\mu$ or $\pi$.
+-   `h0.operator`: Indicates the operator used in the null hypothesis,
+    selected from eq, ne, lt, le, gt, or ge.
+-   `h0.right`: Denotes the right value in the null hypothesis, often
+    expressed as $\mu_0$, $\pi_0$, or a hypothetical value.
+-   `h1.left`: Signifies the left value in the alternative hypothesis,
+    typically $\mu$ or $\pi$.
+-   `h1.operator`: Specifies the operator in the alternative hypothesis,
+    chosen from eq, ne, lt, le, gt, or ge.
+-   `h1.right`: Represents the right value in the alternative
+    hypothesis, usually $\mu_0$, $\pi_0$, or a hypothetical value.
+-   `H0`: Provides the LaTeX representation of the null hypothesis.
+-   `H1`: Presents the LaTeX representation of the alternative
+    hypothesis.
+-   `match.left`: Indicates whether the left values in the null and
+    alternative hypotheses match.
+-   `match.right`: Specifies whether the right values in the null and
+    alternative hypotheses match.
+-   `match.operator`: Determines whether the operators in the null and
+    alternative hypotheses match, covering all real numbers.
+-   `match.type`: Describes the matching type as wrong, left.sided,
+    right.sided, two.sided, greater, or less. If the null hypothesis is
+    not provided, it is determined from the alternative hypothesis.
+    Valid values for the alternative and null include two.sided,
+    greater, less, eq, ne, lt, le, gt, or ge.
+
+```{r}
+hypothesis_latex("\\mu", alternative=c("eq", "ne", "lt", "le", "gt", "ge"),
+                         null=c("eq", "ne", "lt", "le", "gt", "ge"))
+```
+
+Here the function `hypothesis_latex` is used to generate a data frame
+that represents different hypotheses related to the population mean
+($\mu$). Let's break down the key components of this example:
+
+-   `\\mu`: The symbol for the population mean in LaTeX format, which is
+    specified as the first argument to the function.
+
+-   `alternative`: A vector specifying the alternative hypotheses. In
+    this example, the alternatives include:
+
+    -   `eq`: Equality
+    -   `ne`: Inequality
+    -   `lt`: Less than
+    -   `le`: Less than or equal to
+    -   `gt`: Greater than
+    -   `ge`: Greater than or equal to
+
+-   `null`: A vector specifying the null hypotheses. It includes the
+    same set of hypotheses as the `alternative` vector.
+
+The function will generate a data frame with columns representing
+various aspects of the hypotheses, such as left and right values,
+operators, LaTeX representations, and matching criteria.
+
+The resulting data frame will contain rows corresponding to all possible
+combinations of operators in the null and alternative hypotheses. Each
+row represents a unique hypothesis scenario. The `match` columns
+indicate whether the left and right values, as well as the operators,
+match between the null and alternative hypotheses.
+
+In essence, this example explores and generates a comprehensive set of
+hypotheses involving the population mean with different combinations of
+operators in both null and alternative hypotheses.
+
+### `latexdef`
+
+Enhances LaTeX document customization by adding a \def\name{body}
+command, enabling the inclusion of personalized definitions within the
+document body.
+
+```{r}
+latexdef("myvariable", "42")
+```
+
+### `pdensity` and `toLatex`
+
+The `pdensity` function generates a density function in a specified
+interval [a, b], where the endpoints a and b are sampled from the input
+vector x. The function can create either a linear (power=1) or constant
+(power=0) density function. It samples a specified number of elements
+(`size`) without replacement and calculates the values of the
+distribution function.
+
+`toLatex` generates a LaTeX representation of the distribution and its
+parameters.
+
+```{r}
+# Taken from the exercise "Constant_Density"
+ops   <- c("\\leq", "<", "\\geq", ">")
+sym   <- sample(1:2, size=2, replace=TRUE)
+dens  <- pdensity(-5:5, size=4, power=0)
+xdens <- toLatex(dens$pcoeff, digits=FALSE)
+tdens <- toLatex(dens$pcoeff, digits=FALSE, variable="t")
+tdist <- toLatex(integral(dens$pcoeff), digits=FALSE, variable="t")
+str(dens)
+print(tdist)
+```
+
+In this exercise, the `pdensity` function is used to generate a density
+function within a specified interval. The `pdensity` function is called
+with the following parameters: - `x`: The vector `-5:5` is provided,
+from which the endpoints of the interval will be sampled. - `size`: `4`
+elements will be sampled without replacement. - `power`: `0` specifies
+that a constant density function should be generated.
+
+The resulting `dens` object contains information about the generated
+density function. Specifically, `dens$pcoeff` holds the coefficients of
+the generated density function.
+
+-   `toLatex` is used to convert the coefficients of the density
+    function to LaTeX format.
+    -   `xdens`: The coefficients without any specific variable,
+        essentially the constant terms.
+    -   `tdens`: The coefficients with the variable "t" specified.
+    -   `tdist`: The integral of the density function with respect to
+        "t" is converted to LaTeX.
+
+### `toLatex`
+
+After getting a glimpse of the `toLatex` function in the previous example, let's now
+explore it further in detail.
+
+The `toLatex` S3 method is a versatile tool for generating LaTeX representations,
+focusing on statistical distributions and parameters. Derived functions cover a range of
+scenarios, including solution paths, matrices, polynomials, and equation solutions
+through tools like `num_solve()`. This suite provides a practical toolkit for producing
+LaTeX output across various mathematical and statistical contexts.
+
+#### `toLatex.distribution`
+
+Generates LaTeX representation for statistical distributions and their parameters.
+
+#### `toLatex.equation_solve`
+
+This function retrieves a LaTeX representation of the solution path
+obtained through the use of `num_solve()`. It inherits parameters from
+the base `utils::toLatex` function, providing compatibility with its
+usage.
+
+#### `toLatex.html_matrix`
+
+Produces a LaTeX representation for matrices with limited style options.
+
+#### `toLatex.polynomial`
+
+Generates a LaTeX representation for polynomials.
+
+#### `toLatex.prob_solve`
+
+Presents solution pathways in LaTeX/MathJax using an align* environment.
+
+### `toHTMLorLatex`
+
+This function produces either an HTML or LaTeX representation of a
+matrix, contingent on whether the function is invoked within the context
+of `exams2pdf`.
+
+```{r}
+# Example: Generating HTML or LaTeX representation based on context
+matrix_example <- html_matrix(matrix(1:4, nrow = 2))
+result <- toHTMLorLatex(matrix_example)
+str(result)
+```
+
+In this example, the `toHTMLorLatex` function is employed to generate
+either an HTML or LaTeX representation of a matrix. The choice between
+HTML and LaTeX output depends on whether the function is called within
+the context of `exams2pdf`. The resulting representation is then printed
+to the console. Adjust the matrix content and structure as needed for
+the specific use case.
+
+## Supporting Functions for Math LaTeX Output
+
+### `lsumprod`, `lsum`, `lprod`, `lmean`, `lvar`, `lbr`, `lsgn` and `lvec`
+
+1.  `lsumprod`: Creates a LaTeX printout of the sum of the products of
+    corresponding elements in vectors `x` and `y`, including brackets if
+    any element in `x` or `y` starts with a minus sign.
+
+```{r}
+lsumprod(-2:2, (1:5)/10)
+```
+
+This example generates the LaTeX expression for the sum of products: $$
+     \left(-2\right) \cdot 0.1 + \left(-1\right) \cdot 0.2 + 0 \cdot 0.3 + 1 \cdot 0.4 + 2 \cdot 0.5
+     $$
+
+2.  `lsum`:Creates a LaTeX printout of the sum of elements in vector
+    `x`.
+
+```{r}
+lsum(-2:2)
+```
+
+This example generates the LaTeX expression for the sum: $$
+     -2-1+0+1+2
+     $$
+
+3.  `lprod`:Creates a LaTeX printout of the product of elements in
+    vector `x`.
+
+```{r}
+lprod(-3:2)
+```
+
+This example generates the LaTeX expression for the product: $$
+ (-3) \cdot (-2) \cdot (-1) \cdot 0 \cdot 1 \cdot 2 
+  $$
+
+4.  `lmean`: Creates a LaTeX printout of the mean of elements in vector
+    `x`.
+
+```{r}
+lmean(-2:2)
+```
+
+This example generates the LaTeX expression for the mean: $$
+     \frac{-2-1+0+1+2}{5}
+     $$
+
+5.  `lvar`:Creates a LaTeX printout of the variance of elements in
+    vector `x`.
+
+```{r}
+lvar(1:5)
+```
+
+`lvar(x)` will generate a LaTeX printout for the variance of the vector
+`x`. The output will be a mathematical representation of the variance
+formula: $$
+\frac{(1 - \bar{x})^2 + (2 - \bar{x})^2 + (3 - \bar{x})^2 + (4 - \bar{x})^2 + (5 - \bar{x})^2}{5}
+$$ where $\bar{x}$ is the mean of the vector `x`.
+
+6.  `lbr`: Creates a LaTeX printout of the vector `x` with brackets if
+    any element starts with a minus sign.
+
+```{r}
+ lbr(-2:2)
+```
+
+This example generates the LaTeX expressions for each element with
+brackets: $$
+     \left(-2\right), \left(-1\right), 0, 1, 2
+     $$
+
+7.  `lsgn`: Creates a LaTeX printout of the vector `x` with a plus or
+    minus sign at the beginning.
+
+```{r}
+lsgn(-3:1)
+```
+
+In this example, `lsgn` will generate a LaTeX printout with a plus or
+minus at the beginning of each element. The output will be a LaTeX
+representation of the vector: $$
+- 3, -2, - 1, +0 , +1$$
+
+8.  `lvec`: is a versatile function designed to create a LaTeX printout
+    of a vector `x`. This function allows for the specification of the left and right delimiters for the vector.
+
+```{r}
+# Using lvec to create a LaTeX representation of a vector with square brackets
+# lvec(c(1, 2, 3), left = "[", right = "]")
+
+# Using lvec to create a LaTeX representation of a vector with angle brackets and custom collapse
+# lvec(c("a", "b", "c"), left = "<", collapse = " \\cdot ")
+```
+
+### `lprob` and `prob_solve`
+
+-   `prob_solve`: Given a set of events, it computes the total or
+    conditional probability of the given event. If no solution is found,
+    it returns NA. Events are specified using uppercase letters, and
+    operators include ! (complementary event), \| (conditional event),
+    and \^ (intersection of events). The latex attribute of the return
+    value contains computation steps, and if `getprob` is TRUE, it
+    includes the prob vector and compute with all computation steps.
+-   `print`: Shows the solution in ASCII format.
+-   `toLatex`: Shows the solution in LaTeX/MathJax with an `align`
+    environment.
+-   `lprob`: Converts `!A` to $\bar{A}$ and `A^B` to $A \cap B$.
+
+```{r}
+# Example: Solving a Genetics Problem
+# Consider two genes A and B with the following probabilities:
+# P(A) = 0.6, P(B) = 0.4
+# P(A|B) = 0.3, P(B|A) = 0.2
+
+# Compute the probability of having both genes A and B (A^B)
+result_genetics <- prob_solve("A^B", "A" = 0.6, "B" = 0.4, "A|B" = 0.3, "B|A" = 0.2)
+
+# Print the result
+print(result_genetics)
+```
+
+In this genetics example, consider genes A and B. The probabilities of having each gene individually (P(A) and
+P(B)) and the conditional probabilities (P(A\|B) and P(B\|A)) are given.
+The `prob_solve` function is used to compute the probability of having
+both genes A and B (A\^B).
+
+```{r}
+# Example: Probability Expression Transformation
+
+# Suppose we have a probability expression in a format using ^ and !:
+expression <- "!A^B"
+
+# Apply the lprob function to transform the expression
+transformed_expression <- lprob(expression)
+
+# Print the original and transformed expressions
+cat("Original expression:", expression, "\n")
+cat("Transformed expression:", transformed_expression, "\n")
+```
+
+In this example, we start with a probability expression `!A^B`. We then
+apply the `lprob` function to transform the expression by replacing `^`
+with the LaTeX representation for the intersection (`\\cap`) and `!A`
+with the LaTeX representation for the complement (`\\bar{A}`).
+
+## Markdown Functions
+
+### `inline`
+
+This function is designed to knit (render) text within an R code chunk.
+It is utilized to incorporate text-based content into an R Markdown
+document, providing a convenient way to weave together narrative and
+code.
+
+```{r}
+result <- inline("2 + 2")
+cat("The result of the calculation is:", result, "\n")
+```
+
+### `rv`
+
+The provided exercise is used to calculate the expected value for a
+random variable `rvt`.
+
+```{r}
+rateperhour <- sample(10:25, 1)
+rate    <- rateperhour/60
+sec     <- 60/rate
+d       <- distribution("exp", rate=rate)
+number  <- rateperhour
+length  <- 60
+lambda  <- rate
+rvt     <- rv("T", "Wartezeit in Minuten auf den nächsten Wähler")
+str(rvt)
+```
+
+In order to calculate the random variable `rvt`, we use the function
+`rv`. Here `rv` formats a random variable and its meaning for R Markdown
+using a symbol and the explanation to the symbol. The symbol "T" stands
+for the waiting time in minutes until the next voter arrives at a
+polling station. In this case, "T" indicates an exponential distribution
+as we can also observe from the function `distribution`.
+
+### `template`
+
+This function creates a text template that allows the incorporation of R
+code snippets. The template, defined as a character string, can include
+placeholders marked by backticks, where the ellipsis represents variable
+names. The R code within these placeholders is then replaced by its
+corresponding evaluation based on the provided parameter values.
+
+```{r}
+# Example: Creating a dynamic template with embedded R code
+tmpl <- "The sum of `r a` and `r b` is: `r a + b`"
+result <- template(tmpl, a = 1, b = 2)
+cat(result)
+```
+
+### `to_choice`
+
+To determine the correct level of measurement of a variable we use an
+Excel file with two columns with the name of the variable and the level
+of measurement.
+
+```{r}
+# subset of variables we use, variable names are in German  
+data("skalenniveau")
+skalen <- c("nominal", "ordinal", "metrisch")
+stopifnot(all(skalenniveau$type %in% skalen))  # protect against typos
+skala  <- sample(skalenniveau$type, 1)
+exvars <- sample(nrow(skalenniveau), 8)
+tf     <- (skalenniveau$type[exvars]==skala)
+sc     <- to_choice(skalenniveau$name[exvars], tf)
+# Additional answer: Does none fit?
+sc$questions <- c(sc$questions, "Keine der Variablen hat das gewünschte Skalenniveau") 
+sc$solutions <- c(sc$solutions, !any(tf))                                              
+sc
+```
+
+The `to_choice` function generates a object such that can be used in
+`answerlist` and `mchoice2string`. The first parameter is either a
+vector or data frame. The second parameter is a logical vector
+containing `TRUE` if the element in the vector (or row in the data
+frame) contains a true answer.
+
+The parameter `shuffle` samples from the correct and false answers. The
+following example could replace the main code from the example above.
+
+```{r}
+# Subset of variables we use, variable names are in German  
+data("skalenniveau")  
+skalen <- c("nominal", "ordinal", "metrisch")
+skala  <- sample(skalenniveau$type, 1)
+exvars <- sample(nrow(skalenniveau), 8)
+tf     <- (skalenniveau$type[exvars]==skala)
+# select one true and four false answers
+sc     <- to_choice(skalenniveau$name[exvars], tf, shuffle=c(1,4))
+sc
+```
+
+By default the answers are arranged in a certain order, determined by the parameter `order`, which 
+is used to arrange the answers (default: `order`). To use the ordering
+given, set `order=NULL`.
+
+## HTML Functions
+
+### `html_e2m`
+
+The `html_e2m` function facilitates the creation of an HTML page
+containing the contents of XML tags that match a specified pattern. By
+default, it displays the contents of all XML tags. The resulting HTML
+page is stored in the specified HTML file name.
+
+If `name` is set to NULL (default), a temporary file is created. If the
+specified name does not end with .html, the function appends .html.
+
+When `browseURL` is set to TRUE (default), the HTML page is
+automatically opened in the default web browser.
+
+If needed, the contents of XML tags are concatenated with `\n`. Users
+have the flexibility to customize the concatenation for single XML tags
+using the `merge` parameter.
+
+```{r}
+# if (interactive()) {
+# Read XML data from an RDS file
+# resexams <- readRDS(system.file("xml", "klausur-test.rds", package="exams.forge"))
+  
+# Create and display HTML page
+# html_e2m(resexams) # Opens HTML file in the browser}
+```
+
+### `html_matrix_sk`
+
+A twist on creating a `html_matrix` object. It is important to note
+that the length of the `fmt` parameter must match either the number of
+rows (`nrow(m)`) or the number of columns (`ncol(m)`) in the matrix,
+depending on the `byrow` argument.
+
+```{r}
+# html_matrix_sk(m) 
+#   tooltip(sprintf(tooltip, nrow(m), ncol(m)))
+#   hm_cell(fmt=fmt, byrow=byrow)
+```
+
+```{r}
+# Create a matrix
+m <- matrix(1:6, ncol=2)
+
+# Generate and display an html_matrix object
+html_matrix_sk(m, title="", fmt=c("%.0f", "%.1f"))
+
+# Another small example taken from the exercise "Mobil Telephone 2"
+ a  <- runif(4)
+  pa <- ddiscrete(a)
+  b  <- dpois(0:3, 1)
+  pb <- ddiscrete(b)
+  studie <- cbind(pa, pb)
+hstudie <- html_matrix_sk(studie, "Studie / $x$", fmt=rep("%3.1f", 2))
+print(hstudie)
+```
+
+### `html_matrix`, `zebra` and `toHTML`
+
+Returns a HTML representation of a matrix as table. Any
+exercises created for Moodle can be embedded as HTML in an exercise
+and will be translated by `exams.forge` into HTML.
+
+```{r}
+library("magrittr")
+x  <- matrix(1:12, ncol=3)
+hm <- html_matrix(x)
+toHTML(hm)
+
+# hm <- html_matrix(x) %>% zebra() %>% 
+# sprintf("Table has %.0f rows and %.0f columns", nrow(.), ncol(.))
+# toHTML(hm)
+```
+
+With parameters the appearance of the table can be influenced:
+
+-   `title` entry at the top left (default: `""`)
+-   `caption` entry for the caption (default: `""`)
+-   `names$col` entry for the column names (default: `colnames(x)`)
+-   `names$row` entry for the row names (default: `rownames(x)`)
+-   `style$table` style for the table (default: `""`)
+-   `style$caption` style for the caption (default: `""`)
+-   `style$title` style for the caption (default:
+    `"background-color:#999999;vertical-align:top;text-align:left;font-weight:bold;"`)
+-   `style$row` style for the row names (default:
+    `"background-color:#999999;vertical-align:top;text-align:right;font-weight:bold;"`)
+-   `style$col` style for the col names (default:
+    `"background-color:#999999;vertical-align:top;text-align:right;font-weight:bold;"`)
+-   `style$cell` style for the col names (default:
+    `c("background-color:#CCCCCC; vertical-align:top; text-align:right;", "background-color:#FFFFFF; vertical-align:top; text-align:right;")`)
+-   `style$logical` style for a logical matrix entry (default:
+    `c("background-color:#CCCCCC; vertical-align:top; text-align:right;", "background-color:#FFFFFF; vertical-align:top; text-align:right;")`)
+-   `style$numeric` style for a numeric matrix entry (default:
+    `c("background-color:#CCCCCC; vertical-align:top; text-align:right;", "background-color:#FFFFFF; vertical-align:top; text-align:right;")`)
+-   `style$char` style for a character matrix entry (default:
+    `c("background-color:#CCCCCC; vertical-align:top; text-align:right;", "background-color:#FFFFFF; vertical-align:top; text-align:left;"`)
+-   `format$title$fmt` parameter to format the title via `sprintf`
+    (default: `"\%s"`)
+-   `format$row$fmt` parameter to format the row names via `sprintf`
+    (default: `"\%s"`)
+-   `format$col$fmt` parameter to format the col names via `sprintf`
+    (default: `"\%s"`)
+-   `format$cell$fmt` parameter to format a matrix entry via `sprintf`
+-   `format$logical$fmt` parameter to format a logical matrix entry via
+    `sprintf` (default: `"\%d"`)
+-   `format$numeric$fmt` parameter to format a numeric matrix entry via
+    `sprintf` (default: `"\%f"`)
+
+# General Purpose Functions
+
+## Output Checker
+
+### `firstmatch`
+
+Seeks matches for the elements of its first argument among those of its
+second. If multiple matches are found then the first match is returned,
+for further details see `charmatch`.
+
+```{r}
+firstmatch("d", c("chisq", "cauchy"))
+firstmatch("c", c("chisq", "cauchy"))
+firstmatch("ca", c("chisq", "cauchy"))
+```
+
+### `gsimplify`
+
+The `gsimplify` function is designed to simplify a hyperloop object,
+primarily utilized in the context of grid applications. The goal is to
+reduce the complexity of the hyperloop object if simplification is
+feasible.
+
+```{r}
+# Execute three t-test calls: t.test(x, -1), t.test(x, 0), t.test(x, 1)
+ga <- gapply(t.test, x = I(rnorm(100)), mu = -1:1)
+
+# No simplification occurs in this case since `data.name` and `conf.int` have lengths larger than one
+str(gsimplify(ga))
+```
+
+### `hyperloop` and `unique_elem`
+
+For generating answers for multiple choice exercises it is helpful to
+run the same routine several times with different input parameters. For
+example students may forget to divide by n-1 or divide by n instead of
+n. `hyperloop` runs about all parameter combinations. `unique_elem`
+removes duplicate elements from a `hyperloop` object by considering
+specific list elements for comparison. As the outcome in each execution
+might be a list, the deletion process focuses on maintaining distinct
+elements within the `hyperloop` structure.
+
+`ttest_num` is a routine which computes all information required for
+exercises with a $t$-test.
+
+```{r}
+x <- runif(100)
+correct <- ttest_num(x=x, mu0=0.5, sigma=sqrt(1/12))
+str(correct)
+```
+
+Now, let us run many $t$-tests (up to 384) with typical student errors.
+We extract all different test statistic and choose seven wrong answers
+and one correct answer with the condition that all solutions differ at
+least by 0.05.
+
+```{r}
+res <- hyperloop(ttest_num, 
+                 n           = list(1, correct$n, correct$n+1),
+                 mu0         = list(correct$mu0, correct$mean),
+                 mean        = list(correct$mu0, correct$mean), 
+                 sigma       = list(correct$sigma, correct$sd, sqrt(correct$sigma), sqrt(correct$sd)),
+                 sd          = list(correct$sigma, correct$sd, sqrt(correct$sigma), sqrt(correct$sd)),
+                 norm        = list(TRUE, FALSE)
+                )
+# extract all unique test statistics
+stat <- unlist(unique_elem(res, "statistic"))
+# select 7 wrong test statistic such that the difference 
+# between all possible test statistics is at least 0.01
+repeat {
+  sc <- to_choice(stat, stat==correct$statistic, shuffle=c(1,7))
+  if (all_different(sc$questions, 0.005)) break
+}
+# show possible results for a MC questions
+sc$questions
+sc$solutions
+```
+
+## Text Processing and Formatting
+
+### `knitif`
+
+The function knitif is designed to evaluate a logical condition and
+return a knitted result based on the outcome. It takes a text argument
+and produces the rendered output using R Markdown syntax.
+
+```{r}
+knitif(runif(1) < 0.5, 'TRUE' = "`r pi`", 'FALSE' = "$\\pi=`r pi`$")
+```
+
+In the given example, the `knitif` function is employed with the logical
+condition `runif(1) < 0.5`. This condition evaluates to `FALSE` in this
+specific instance. As a result, the function selects the text argument
+associated with `FALSE`, which is "$\\pi=`r pi`$". Therefore, the output
+of the `knitif` function in this example is "$\\pi=`r pi`$".
+
+### `now`
+
+If we randomize the task and the stories then we may have a lot of
+different tasks. If questions arise then we need to identify the exact
+task a student has.
+
+Therefore we embed a:
+
+```{r}
+substring(now(), 10)
+```
+
+The `now` function uses:
+`gsub('.', '', sprintf("%.20f", as.numeric(Sys.time())), fixed=TRUE)`
+and ensures that every time called a different number is returned.
+
+### `nsprintf` (`round_de` and `schoice_de`)
+
+The `nsprintf` function generates text based on the value(s) provided in
+n. Specifically, it includes two sub-functions:
+
+-   `round_de`: Returns text indicating rounding instructions, such as
+    "Round your result to the nearest whole number," "Round your result
+    to one decimal place," or "Round your result to n decimal places."
+-   `schoice_de`: Returns text indicating that there can be one or more
+    correct answers. It emphasizes that providing one correct answer is
+    sufficient. If multiple answers are given and at least one is
+    incorrect, the task is considered incorrectly answered.
+
+```{r}
+# Example taken from the exercise "DSL 4"
+repeat {
+  border  <- sample(3:10, 1)-1
+  lambda  <- sample(seq(0.5, 6, by=0.1), 1)
+  if (ppois(border, lambda = lambda)>1e-3) break
+}
+d       <- distribution("pois", lambda=lambda)
+ptype   <- "less"
+sc      <- num_result(cdf(d, border), 4)
+txt     <- nsprintf(border, "%i Netzunterbrechungen",
+                    '0'="keine Netzunterbrechung",
+                    '1'="eine Netzunterbrechung")
+str(txt)
+```
+
+In this exercise, the `nsprintf` function is used to create a text
+message based on the value of `border`, which represents the number of
+network interruptions in a specific context. The resulting text is then
+embedded in the question text for the exercise. Here, `nsprintf` is used
+with the following parameters:
+
+-   `border`: The value to be included in the text.
+-   `"%i Netzunterbrechungen"`: The format string indicating where the
+    value from `border` should be inserted. `%i` is a placeholder for an
+    integer.
+
+The following arguments provide alternative text depending on the value
+of `border`:
+
+-   `'0'="keine Netzunterbrechung"`: If `border` is 0, the text "keine
+    Netzunterbrechung" (no network interruption) will be used.
+-   `'1'="eine Netzunterbrechung"`: If `border` is 1, the text "eine
+    Netzunterbrechung" (one network interruption) will be used.
+
+The resulting `txt` variable will contain a formatted text message that
+includes the value of `border` and provides context-specific information
+about network interruptions.
+
+## MIME
+
+### `mime_image`
+
+The `mime_image` function returns the MIME type of an image based on the
+provided filename extension. In cases where a corresponding MIME type
+for a given file extension is not identified, the function returns the
+extension itself.
+
+```{r}
+image_file <- "example_image.jpg"
+
+# Retrieve MIME type for the given image file
+mime_type <- mime_image(image_file)
+
+# Display the result
+cat("MIME Type for", image_file, ":", mime_type, "\n")
+```
+
+In this example, the `mime_image` function is used to obtain the MIME
+type for an image file named "example_image.jpg." The resulting MIME
+type is then printed using the `cat` function.
+

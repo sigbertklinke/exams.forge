@@ -1,0 +1,109 @@
+#' @rdname ddiscrete2
+#' @aliases biv_discrete_prob
+#' @title Bivariate Discrete Probability Function
+#' @description Creates a bivariate discrete probability function based on the marginal probability functions 
+#' \code{row} and \code{col}. If \code{unit} is not given then `unit` will be the product of the units
+#' used in \code{row} and \code{col}, otherwise it will appear as the least common multiple \code{unit} product of 
+#' the units used in \code{row} and \code{col}. 
+#' If \code{target} is \code{NA} then the common distribution of two independent random variables
+#' is returned, otherwise an iterative algorithm is run to approach a \code{target} association or 
+#' correlation measure, see also [exams.forge::assoc_data()] (called internally).
+#' \code{zero} allows for zero entries in the common distribution.
+#' \code{FUN} computes the association or correlation measures based on a
+#' frequency table. \code{tol} gives the maximal deviation of the association or correlation measure
+#' and the \code{target} value. \code{maxit} limits the number of steps.
+#' Please note that a solution is not guaranteed, especially for extreme values for \code{target}, for example
+#' for \eqn{+1}, \eqn{-1} or nearby values.
+#' If \code{attr(joint, "iterations")==maxit} then you need 
+#' either to increase \code{maxit}, to decrease \code{tol} or to check if you have chosen an 
+#' appropriate \code{target} value (for a nominal measure in \eqn{0 <= target <= 1}, for ordinal measure in \eqn{-1 <= target <= +1}).
+#'
+#' @param row numeric: marginal `row` distribution
+#' @param col numeric: marginal `col` distribution
+#' @param unit integer: reciprocal of the smallest non-zero probability (default: \code{NULL})
+#' @param zero logical: zeros are allowed in the final probabilities (default: \code{FALSE})
+#' @param FUN function: association or correlation function (default: \code{nom.cc})
+#' @param target numeric: target association or correlation (default: \code{NA})
+#' @param tol numeric: tolerance for target association or correlation (default: \code{0.001})
+#' @param maxit integer: maximal number of iterations (default: \code{100})
+#' @param ... further parameters for \code{FUN}
+#' 
+#' @md
+#' @return A bivariate discrete probability function.
+#' @export
+#'
+#' @examples
+#' row <- ddiscrete(runif(5))
+#' col <- ddiscrete(runif(3))
+#' joint <- ddiscrete2(row, col)
+#' joint
+#' joint <- ddiscrete2(row, col, target=0.5)
+#' joint
+#' nom.cc(joint*attr(joint, "unit"))
+ddiscrete2 <- function(row, col, unit=NULL, zero=FALSE, FUN=nom.cc, target=NA, tol=0.001, maxit=500, ...) {
+  lcm <- function(x) {
+    xm <- x <- as.integer(x)
+    while(!all(xm==xm[1])) {
+      ind     <- which(xm==min(xm))
+      xm[ind] <- xm[ind] + x[ind]
+    } 
+    xm[1]
+  }
+  #
+  #browser()
+  stopifnot(is.na(target) || abs(target)<=1)
+  rowunit <- attr(row, "unit")
+  colunit <- attr(col, "unit")
+  if (is.null(rowunit)) {
+    fracs   <- attr(fractions(row), "fracs")
+    units   <- as.integer(sapply(strsplit(fracs, "/", fixed=TRUE), '[[', 2))
+    rowunit <- lcm(units)
+  }
+  if (is.null(colunit)) {
+    fracs   <- attr(fractions(col), "fracs")
+    units   <- as.integer(sapply(strsplit(fracs, "/", fixed=TRUE), '[[', 2))
+    colunit <- lcm(units)
+  } 
+  unit <- lcm(c(unit, rowunit*colunit))
+  # due to conversion error additional rounding
+  fx <- matrix(as.integer(round(unit*(row %o% col))), ncol=length(col), nrow=length(row))
+  fx <- assoc_data(fx, zero=zero, FUN=FUN, target=target, tol=tol, maxit=maxit, ...)
+#  it   <- 0
+#  curr <- 0
+#  if (!is.na(target)) {
+#    # browser(expr=(sum(fx)!=unit))
+#    fun  <- match.fun(FUN)
+#    curr <- fun(fx/unit, ...)
+#    d    <- abs(curr-target)
+#    if (!equal(d,0, tol)) {
+#      while(it<maxit) {
+#        i    <- sample(length(row), size=2)
+#        j    <- sample(length(col), size=2)
+#        doit <- (if(zero) all(fx[i,j]>=0) else all(fx[i,j]>0)) && all(fx[i,j]<unit)
+#        if (doit) {
+#          fxt <- fx
+#          fxt[i[1], j[1]] <- fxt[[i[1], j[1]]]+1
+#          fxt[i[1], j[2]] <- fxt[[i[1], j[2]]]-1
+#          fxt[i[2], j[1]] <- fxt[[i[2], j[1]]]-1
+#          fxt[i[2], j[2]] <- fxt[[i[2], j[2]]]+1
+#          curr <- fun(fxt/unit, ...)
+#          dt   <- abs(curr-target)
+#          if (dt<d) {
+#            d    <- dt
+#            fx   <- fxt
+#            if (equal(d,0, tol)) break
+#          }
+#        }
+#        it <- it+1
+#      }
+#    }
+#  }
+  #browser()
+  structure(fx/unit, unit=unit, iterations=attr(fx, "iterations"), target=attr(fx, "target"))
+}
+
+#' @rdname ddiscrete2
+#' @export
+# biv_discrete_prob <- function(...){
+#  ddiscrete2(...)}
+biv_discrete_prob <- ddiscrete2
