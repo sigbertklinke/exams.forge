@@ -57,6 +57,9 @@ distribution <- function(name, ...) UseMethod("distribution")
 #' @importFrom utils data
 #' @export
 distribution.default <- function(name, ..., discrete=NA) { 
+  if (!is.character(name)) {
+    stop(sprintf("Expected distribution name, got '%s', maybe you use name='...'", as.character(name)))
+  }
   ret <- list(...)
 #  data("distributions", package="exams.forge")
   ind   <- pmatch(name, the$distributions$r)

@@ -27,9 +27,8 @@ Note if \code{nobs<=10} then the following data sets are available:
 \itemize{
 \item \code{sos100=sumofsquares(100, 10, zerosum=TRUE, maxt=Inf)},
 \item \code{sos200=sumofsquares(200, 10, zerosum=TRUE, maxt=Inf)},
-\item \code{sos400=sumofsquares(400, 10, zerosum=TRUE, maxt=Inf)},
-\item \code{sos800=sumofsquares(800, 10, zerosum=TRUE, maxt=Inf)}, and
-\item \code{sos1000=sumofsquares(100, 10, zerosum=TRUE, maxt=Inf)}
+\item \code{sos400=sumofsquares(400, 10, zerosum=TRUE, maxt=Inf)}, and
+\item \code{sos800=sumofsquares(800, 10, zerosum=TRUE, maxt=Inf)}
 }
 }
 \examples{

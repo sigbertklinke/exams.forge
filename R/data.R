@@ -36,10 +36,13 @@
 
 #' @rdname sos
 #' @title Precomputed Sum of Squared Data
-#' @aliases sos100 sos200 sos400 sos800 sos1000
+#' @aliases sos100 sos200 sos400 sos800
 #' @description
 #' Five data matrices with precomputed results from \code{sumofsquares(n, 10, zerosum=TRUE, maxt=Inf)} for
-#' \code{n=100}, \code{n=200}, \code{n=400},\code{n=800}, and \code{n=1000}.
+#' \code{n=100}, \code{n=200}, \code{n=400}, and \code{n=800}.
+#'
+#' More generally, datasets can be accessed using \code{sos(n, nmax)}, which
+#' retrieves or computes results from \code{sumofsquares(n, nmax, zerosum=TRUE, maxt=Inf)}.
 #'
 #' @docType data
 #'
@@ -48,7 +51,6 @@
 #' data(sos200)
 #' data(sos400)
 #' data(sos800)
-#' data(sos1000)
 #'
 #' @format For each line of a matrix it holds \eqn{\sum_{i=1}^k x_i^2=n} and \eqn{\sum_{i=1}^k x_i=0}.
 #' It contains all integer solutions up to \code{k<=10}. \code{NA} means that this entry is not used.
@@ -73,7 +75,3 @@
 #' @rdname sos
 #' @format NULL
 "sos800"
-
-#' @rdname sos
-#' @format NULL
-"sos1000"

@@ -1,32 +1,37 @@
 #' @rdname toHTML
 #' @aliases toLatex toHTMLorLatex
-#' @title HTML and LaTeX Matrix Representations 
-#' @description 
-#' * `toHTML` returns an HTML representation of a matrix and, optionally, shows the result in the browser.
-#' If you decide to view the result in a browser then the HTML will be written to a temporary file and 
-#' [utils::browseURL()] will be called
-#' * `toLatex` returns a LaTeX representation of a matrix, but supports just a small subset of style options 
-#' * `toHTMLorLatex` returns an HTML or LaTeX representation of a matrix, depending if `exams2pdf` is in the call list or not
+#' @title Export Matrices as HTML or LaTeX
+#' @description Convert a matrix to a formatted representation in HTML or LaTeX:
 #' 
-#' @param x,object html_matrix object
-#' @param browser logical: show the HTML in a browser (default: \code{FALSE})
-#' @param ... further parameters to [utils::browseURL()]
+#' * `toHTML`: Returns an HTML table of a matrix. Optionally displays it in a browser
+#'   via a temporary file using [utils::browseURL()].
+#' * `toLatex`: Returns a LaTeX table representation. Supports a subset of style options.
+#' * `toHTMLorLatex`: Chooses HTML or LaTeX output based on the presence of `exams2pdf` 
+#'   in the call stack.
 #'
-#' @md
-#' @return character
+#' @param x,object An object of class `html_matrix`.
+#' @param browser Logical; if `TRUE`, the HTML output is opened in a browser (default `FALSE`).
+#'   Only used by `toHTML`.
+#' @param delay Numeric; seconds to wait before deleting temporary HTML files. A value of `0`
+#'   keeps the file until the R session ends. Only used by `toHTML`.
+#' @param ... Additional arguments passed to [utils::browseURL()] (only relevant for `toHTML`).
+#'
+#' @return A character string containing the HTML or LaTeX representation of the matrix.
 #' @importFrom utils browseURL
 #' @importFrom tools toHTML
 #' @export
 #'
 #' @examples
 #' library("tools")
-#' m    <- matrix(1:12, ncol=4)
-#' hm   <- html_matrix(m)
-#' if (interactive()) html <- toHTML(hm, browser=TRUE)
+#' m  <- matrix(1:12, ncol = 4)
+#' hm <- html_matrix(m)
+#' # toHTML(hm, browser = TRUE) # opens into browser
 #' toHTML(hm)
 #' toLatex(hm)
-toHTML.html_matrix <- function(x, browser=FALSE, ...)  {
-    style <- function(l) {
+#' toHTMLorLatex(hm)
+
+toHTML.html_matrix <- function(x, browser=FALSE, delay=2, ...)  {
+  style <- function(l) {
     use <- setdiff(names(l), c("tooltip", "value", "fmt", "")) 
     if (length(use)==0) return('')
     use2 <- gsub("_", "-", use, fixed=TRUE)
@@ -40,7 +45,7 @@ toHTML.html_matrix <- function(x, browser=FALSE, ...)  {
   stopifnot("html_matrix" %in% class(x))
   tooltip <- attr(x, "tooltip")
   tabletitle <- if (is.null(tooltip)) '' else sprintf(' title="%s"', tooltip)
-  html <- paste0("<table", style(attr(x, "table")), tabletitle, ">\n")
+  html <- paste0("<p><table", style(attr(x, "table")), tabletitle, ">\n")
   tr    <- attr(x, "tr")
   title <- attr(x, "title")
   rows  <- attr(x, "rownames")
@@ -64,12 +69,12 @@ toHTML.html_matrix <- function(x, browser=FALSE, ...)  {
     }
     html <- paste0(html, "</tr>\n")
   }
-  html <- paste0(html, "</table>") 
+  html <- paste0(html, "</table></p>") 
   if (browser) {
     file <- tempfile(fileext=".html")
-    on.exit(unlink(file))
     writeLines(html, file)
-    browseURL(file, ...)  
+    browseURL(file, ...)
+    cleanFile(file, delay)
   }
   html
 }

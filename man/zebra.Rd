@@ -24,8 +24,9 @@ This function applies alternating background colors (zebra striping) to an
 }
 \examples{
 library("magrittr")
-m  <- matrix(1:12, ncol = 4)
+m  <- matrix(13:24, ncol = 4)
 hm <- html_matrix(m) \%>\% zebra()
-html <- toHTML(hm, browser = TRUE)
+html <- toHTML(hm)
+if (interactive()) toHTML(hm, browser = TRUE) # opens in browser
 
 }

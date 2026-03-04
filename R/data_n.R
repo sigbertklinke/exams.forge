@@ -4,15 +4,17 @@
 #' @aliases dn
 #' @aliases dn25
 #' @aliases dnsq
-#' @title Number of Observations
-#' @description Generates a sequence of sample sizes in a range from `min=5` to a `max`:
-#' * whose root is an integer (`data_nsq`), and
-#' * that are divisible only by 2 and 5 (`data_n25`)
+#' @title Generate Sequences of Sample Sizes
+#' @description Generate sequences of integers representing sample sizes within a specified range.
+#' 
+#' Functions support two specialized sequences:
+#' * `data_nsq` / `dnsq`: sample sizes that are perfect squares.
+#' * `data_n25` / `dn25`: sample sizes divisible only by 2 and 5.
 #'
-#' @param max integer: maximum sample size
-#' @param min integer: minimum sample size (default: `5`)
+#' @param max Integer. Maximum sample size.
+#' @param min Integer. Minimum sample size (default: `5`).
 #'
-#' @return A sequence of integers.
+#' @return An integer vector of sample sizes satisfying the criteria.
 #' @export
 #'
 #' @examples

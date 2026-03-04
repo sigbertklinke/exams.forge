@@ -16,46 +16,57 @@ num_res(x, digits = NULL, tolerance = NULL, tolmult = 2, ...)
 int_res(x, ...)
 }
 \arguments{
-\item{x}{numeric: rounded data}
+\item{x}{numeric: the input values}
 
-\item{digits}{numeric: number of digits of rounding (default: \code{NULL})}
+\item{digits}{numeric: number of digits to round to (default: \code{NULL})}
 
-\item{tolerance}{numeric: tolerance for rounded data (default: \code{NULL})}
+\item{tolerance}{numeric: optional numeric tolerance (default: \code{NULL})}
 
-\item{tolmult}{numeric: multiplier for tolerance}
+\item{tolmult}{numeric: multiplier for tolerance calculation (default: 2)}
 
-\item{...}{further parameters from \code{\link[exams:fmt]{exams::fmt()}}}
+\item{...}{further arguments passed to \code{fmt()}. Common arguments include:
+\itemize{
+\item \code{digits}: number of digits for formatting
+\item \code{zeros}: logical; pad with trailing zeros (default TRUE for digits < 4)
+}}
 }
 \value{
-A list.
+A list with elements \code{x}, \code{fx}, \code{tolerance}, and \code{digits}.
 }
 \description{
-\code{num_result} creates a list with the following elements:
+\code{num_result} creates a list summarizing numeric values with rounding and tolerance.
+It returns the original values, rounded values, the digits used, and the tolerance.
+
+The rounding is done with the internal function \code{fmt()} (similar to \code{exams::fmt()}).
+Users can pass additional arguments to \code{fmt()} via \code{...}.
 \itemize{
-\item \code{x} the original values
-\item \code{fx} the rounded values with \code{\link[exams:fmt]{exams::fmt()}} as a character
-\item \code{tolerance} the tolerance
-\item \code{digits} the digits used for rounding
+\item \code{x}: original numeric values
+\item \code{fx}: rounded values as character (via \code{fmt()})
+\item \code{tolerance}: numeric tolerance for comparison
+\item \code{digits}: digits used for rounding
 }
 
-Note that \code{x} may contain more than one numeric value to determine the rounding and tolerance.
-Make sure that you use for numeric exercises \code{...$x[1]}.
+If \code{digits} is not provided:
+\itemize{
+\item If \code{length(x) > 1}, \code{ceiling(-log10(min(diff(sort(x)), na.rm = TRUE)))} is used.
+\item If \code{length(x) == 1}, \code{3 + ceiling(-log10(abs(x)))} is used.
+}
 
-If \code{digits} are not given and \code{length(x)>1} then \code{ceiling(-log10(min(diff(sort(x)), na.rm=TRUE)))} is used.
-If \code{digits} are not given and \code{length(x)==1} then \code{3+ceiling(-log10(abs(x)))} is used.
-If no \code{tolerance} is given then \code{tolmult*10^(1-digits)} is used.
+If \code{tolerance} is not provided, it defaults to \code{tolmult * 10^(1 - digits)}.
 
-\code{int_result} can be used if the result is an integer number and calls \code{num_result(x, 0, 0.1, 1, ...)} with
-a tolerance of 0.1.
+\code{int_result()} is a shortcut for integer values (\code{digits = 0}, \code{tolerance = 0.1}).
 }
 \examples{
-# height for german man (in meter)
-x <- rnorm(10, mean=1.8, sd =0.25)
-num_result(c(mean(x), x), digits=2)
+# Example: numeric values
+x <- rnorm(10, mean = 1.8, sd = 0.25)
+num_result(c(mean(x), x), digits = 2)
+
+# Example: integer result
 int_result(mean(x))
-#
-str(num_result(pi, 3))
-str(num_result(pi, 6))
-str(num_result(pi, 6, tolmult=5))
-str(num_result(pi, 6, tolmult=5, tolerance=1e-6))
+
+# Example: different digits and tolerance
+num_result(pi, 3)
+num_result(pi, 6)
+num_result(pi, 6, tolmult = 5)
+num_result(pi, 6, tolmult = 5, tolerance = 1e-6)
 }

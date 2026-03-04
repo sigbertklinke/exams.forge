@@ -10,9 +10,8 @@
 #' Note that the following data sets are available: 
 #' * \code{sos100=sumofsquares(100, 10, zerosum=TRUE, maxt=Inf)}, 
 #' * \code{sos200=sumofsquares(200, 10, zerosum=TRUE, maxt=Inf)}, 
-#' * \code{sos400=sumofsquares(400, 10, zerosum=TRUE, maxt=Inf)}, 
-#' * \code{sos800=sumofsquares(800, 10, zerosum=TRUE, maxt=Inf)}, and 
-#' * \code{sos1000=sumofsquares(100, 10, zerosum=TRUE, maxt=Inf)} 
+#' * \code{sos400=sumofsquares(400, 10, zerosum=TRUE, maxt=Inf)}, and
+#' * \code{sos800=sumofsquares(800, 10, zerosum=TRUE, maxt=Inf)} 
 #' 
 #' @param n integer: number to decompose as sum of squares
 #' @param nmax integer: maximum number of squares in the sum
@@ -22,6 +21,8 @@
 #'
 #' @md
 #' @return A matrix with `nmax` column with \eqn{x_i}'s. \code{NA} means number has not been used.
+#'   If no solution exists for the given \code{n}, a matrix with a single row
+#'   filled with \code{NA} values is returned.
 #' @export
 #'
 #' @examples
@@ -106,11 +107,12 @@ sumofsquares <- function(n, nmax=10, zerosum=FALSE, maxt=30, size=100000L) {
       }      
     }
     sos <- soszero
-    sos <- sos[1:nsoszero,]
+    sos <- sos[1:nsoszero,, drop=FALSE]
     sos[sos==0] <- NA_integer_
   }
+  #browser()
   sos <- t(apply(sos, 1, sort, na.last=TRUE))
-  sos <- sos[!duplicated(sos),]
+  sos <- sos[!duplicated(sos),, drop=FALSE]
   attr(sos, "full") <- full
   sos
 }

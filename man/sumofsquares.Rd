@@ -22,6 +22,8 @@ sum_sq(n, nmax = 10, zerosum = FALSE, maxt = 30, size = 100000L)
 }
 \value{
 A matrix with \code{nmax} column with \eqn{x_i}'s. \code{NA} means number has not been used.
+If no solution exists for the given \code{n}, a matrix with a single row
+filled with \code{NA} values is returned.
 }
 \description{
 Decomposes an integer \code{n} into a sum of squared integers (\eqn{n = \sum_{i=1}^k x_i^2}; \eqn{1\leq x_i <n})
@@ -34,9 +36,8 @@ Note that the following data sets are available:
 \itemize{
 \item \code{sos100=sumofsquares(100, 10, zerosum=TRUE, maxt=Inf)},
 \item \code{sos200=sumofsquares(200, 10, zerosum=TRUE, maxt=Inf)},
-\item \code{sos400=sumofsquares(400, 10, zerosum=TRUE, maxt=Inf)},
-\item \code{sos800=sumofsquares(800, 10, zerosum=TRUE, maxt=Inf)}, and
-\item \code{sos1000=sumofsquares(100, 10, zerosum=TRUE, maxt=Inf)}
+\item \code{sos400=sumofsquares(400, 10, zerosum=TRUE, maxt=Inf)}, and
+\item \code{sos800=sumofsquares(800, 10, zerosum=TRUE, maxt=Inf)}
 }
 }
 \examples{

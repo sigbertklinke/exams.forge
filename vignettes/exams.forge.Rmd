@@ -26,9 +26,9 @@ editor_options:
 ---
 ```{r setup, include = FALSE}
 suppressPackageStartupMessages({
-library("extraDistr")
+#library("extraDistr")
 library("knitr")
-library("exams")
+#library("exams")
 library("exams.forge")
 })
 knitr::opts_chunk$set(
@@ -592,7 +592,7 @@ correlation coefficient from the scores recorded from selected students
 in the mathematics and statistics exam.
 
 ```{r pearson_data}
-data(sos100, package="exams.forge.data")
+data(sos100, package="exams.forge")
 n     <- sample(4:8, 1)
 rseq  <- seq(-0.95, 0.95, by=0.05)
 r     <- sample(rseq, size=1, prob=rseq^2)
@@ -3296,40 +3296,6 @@ apply the `lprob` function to transform the expression by replacing `^`
 with the LaTeX representation for the intersection (`\\cap`) and `!A`
 with the LaTeX representation for the complement (`\\bar{A}`).
 
-### `vexpar`
-
-The `vexpar` function extends the capabilities of the `expar` function (from the `exams` package) 
-by introducing recursive expression parsing for multiple inputs. This makes it easy to handle 
-scenarios where you need to process multiple files efficiently, whether they are provided as a vector or a list.
-
-- The function accepts a single file name, a character vector of file names, or a list of file names.
-- It automatically processes each element in a list by recursively calling itself.
-- It efficiently parses all files in a character vector using `sapply`.
-
-```{r vexpar, eval=FALSE}
-# Parse a single file
-singleresult <- vexpar("example_file.Rmd", instruction = NULL)
-print(singleresult)
-
-# Parse multiple files provided as a character vector
-file_vector <- c("example1.Rmd", "example2.Rmd")
-result_vector <- vexpar(file_vector, instruction = NULL)
-print(result_vector)
-
-# Parse files provided as a list
-file_list <- list("example1.Rmd", "example2.Rmd", "example3.Rmd")
-result_list <- vexpar(file_list, instruction = NULL)
-print(result_list)
-```
-
-Let us imagine that we have a set of .Rmd files that need to be parsed for an automated 
-exam generation process. Instead of manually invoking `expar` for each file, 
-we could use `vexpar` to streamline the task:
-
-1. If there are files in a folder, pass their paths as a vector.
-2. If the files are organized hierarchically (e.g., grouped in a list), simply pass the list to `vexpar`.
-
-The output will either be a parsed object for a single file or a list/vector of parsed results for multiple files.
 
 ## Markdown Functions
 
@@ -3368,7 +3334,7 @@ of measurement.
 
 ```{r to_choice1}
 # subset of variables we use, variable names are in German  
-data("skalenniveau", package="exams.forge.data")
+data("skalenniveau", package="exams.forge")
 skalen <- c("nominal", "ordinal", "metrisch")
 stopifnot(all(skalenniveau$type %in% skalen))  # protect against typos
 skala  <- sample(skalenniveau$type, 1)

@@ -1,44 +1,51 @@
 #' @rdname num_result
 #' @aliases num_res
 #' @title Numeric Rounding List
-#' @description `num_result` creates a list with the following elements:
+#' @description 
+#' `num_result` creates a list summarizing numeric values with rounding and tolerance. 
+#' It returns the original values, rounded values, the digits used, and the tolerance. 
 #' 
-#' * `x` the original values
-#' * `fx` the rounded values with [exams::fmt()] as a character
-#' * `tolerance` the tolerance
-#' * `digits` the digits used for rounding
+#' The rounding is done with the internal function `fmt()` (similar to `exams::fmt()`). 
+#' Users can pass additional arguments to `fmt()` via `...`.
 #' 
-#' Note that `x` may contain more than one numeric value to determine the rounding and tolerance. 
-#' Make sure that you use for numeric exercises `...$x[1]`.
+#' * `x`: original numeric values
+#' * `fx`: rounded values as character (via `fmt()`)
+#' * `tolerance`: numeric tolerance for comparison
+#' * `digits`: digits used for rounding
 #' 
-#' If `digits` are not given and `length(x)>1` then `ceiling(-log10(min(diff(sort(x)), na.rm=TRUE)))` is used.
-#' If `digits` are not given and `length(x)==1` then `3+ceiling(-log10(abs(x)))` is used.
-#' If no `tolerance` is given then `tolmult*10^(1-digits)` is used.
+#' If `digits` is not provided:
+#' * If `length(x) > 1`, `ceiling(-log10(min(diff(sort(x)), na.rm = TRUE)))` is used.
+#' * If `length(x) == 1`, `3 + ceiling(-log10(abs(x)))` is used.
 #' 
-#' `int_result` can be used if the result is an integer number and calls `num_result(x, 0, 0.1, 1, ...)` with 
-#' a tolerance of 0.1.
+#' If `tolerance` is not provided, it defaults to `tolmult * 10^(1 - digits)`.
 #' 
-#' @param x numeric: rounded data
-#' @param digits numeric: number of digits of rounding (default: \code{NULL})
-#' @param tolerance numeric: tolerance for rounded data (default: \code{NULL})
-#' @param tolmult numeric: multiplier for tolerance 
-#' @param ... further parameters from [exams::fmt()]
+#' `int_result()` is a shortcut for integer values (`digits = 0`, `tolerance = 0.1`).
 #' 
-#' @return A list.
+#' @param x numeric: the input values
+#' @param digits numeric: number of digits to round to (default: `NULL`)
+#' @param tolerance numeric: optional numeric tolerance (default: `NULL`)
+#' @param tolmult numeric: multiplier for tolerance calculation (default: 2)
+#' @param ... further arguments passed to `fmt()`. Common arguments include:
+#'   * `digits`: number of digits for formatting
+#'   * `zeros`: logical; pad with trailing zeros (default TRUE for digits < 4)
+#' 
+#' @return A list with elements `x`, `fx`, `tolerance`, and `digits`.
 #' @md
-#' @importFrom exams fmt
 #' @export
 #'
 #' @examples
-#' # height for german man (in meter)
-#' x <- rnorm(10, mean=1.8, sd =0.25)
-#' num_result(c(mean(x), x), digits=2)
+#' # Example: numeric values
+#' x <- rnorm(10, mean = 1.8, sd = 0.25)
+#' num_result(c(mean(x), x), digits = 2)
+#'
+#' # Example: integer result
 #' int_result(mean(x))
-#' #
-#' str(num_result(pi, 3))
-#' str(num_result(pi, 6))
-#' str(num_result(pi, 6, tolmult=5))
-#' str(num_result(pi, 6, tolmult=5, tolerance=1e-6))
+#'
+#' # Example: different digits and tolerance
+#' num_result(pi, 3)
+#' num_result(pi, 6)
+#' num_result(pi, 6, tolmult = 5)
+#' num_result(pi, 6, tolmult = 5, tolerance = 1e-6)
 num_result <- function (x, digits = NULL, tolerance = NULL, tolmult = 2, ...) { 
   if (is.null(digits)) {
     if (length(x) < 2) {

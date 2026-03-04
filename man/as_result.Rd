@@ -27,23 +27,44 @@ tolerance(x)
 \arguments{
 \item{x}{numeric: value to round}
 
-\item{digits}{integer or character: Digits that should be used for rounding or \code{"integer"} for \code{digits=0}, \code{"\%"} for \code{digits=2},  or  \code{"probability"} for \code{digits=4}. Abbreviations for the names can be used}
+\item{digits}{integer or character: Number of digits to use for rounding, see Details.}
 
-\item{tol}{numeric: tolerance for result}
+\item{tol}{numeric: tolerance for the result (defaults to \code{2*10^(-digits)} if NA)}
 
-\item{FUN}{function: rounding function (default: \code{round2})}
+\item{FUN}{function: rounding function (default: internal \code{round2()})}
 }
 \value{
-A list with the original and a rounded value, digits used and tolerance.
+A list of class \code{result} containing:
+\item{x}{Original value}
+\item{r}{Rounded value}
+\item{digits}{Digits used for rounding}
+\item{tol}{Tolerance for the result}
 }
 \description{
-Rounds \code{x} according to \code{digits}, \code{FUN} and sets a tolerance for the result.
-If the tolerance is not stated, consider it the maximum of \code{2*10^(-digits)}.
+Rounds \code{x} according to \code{digits} and the rounding function \code{FUN}, and sets
+a tolerance for the result. If \code{tol} is not provided, it defaults to \code{2*10^(-digits)}.
+}
+\details{
+Results with Rounding
+
+Creates a structured result with a numeric value rounded according to specified digits,
+an optional tolerance, and a rounding function.
+
+By default, rounding is performed using an \strong{internal function \code{round2()}}, which is similar
+to \code{exams::round2()}, but users should not call it directly. You can also supply a
+custom rounding function via the \code{FUN} argument.
+
+If \code{digits} is a character, the following abbreviations are recognized:
+\describe{
+\item{\code{"integer"}}{digits = 0}
+\item{\code{"\%"}}{digits = 2}
+\item{\code{"probability"}}{digits = 4}
+}
+Partial matching of these names is allowed.
 }
 \examples{
-x <- as_result(1/3, "prob")
+x <- as_result(1/3, "probability")
 tol(x)
 rounded(x)
-tol(x)
 digits(x)
 }

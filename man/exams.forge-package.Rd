@@ -108,4 +108,9 @@ Gnu General Public License 3.
 \author{
 \strong{Maintainer}: Sigbert Klinke \email{sigbert@hu-berlin.de} (\href{https://orcid.org/0000-0003-3337-1863}{ORCID})
 
+Other contributors:
+\itemize{
+  \item Kleio Chrysopoulou Tseva \email{kleio.chrysopoulou.tseva@hu-berlin.de} [contributor]
+}
+
 }

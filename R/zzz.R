@@ -1,4 +1,4 @@
-#' @import extraDistr rjson tinytex yaml exams.forge.data
+#' @import rjson tinytex yaml
 
 the <- new.env(parent = emptyenv())
 
@@ -8,7 +8,7 @@ the <- new.env(parent = emptyenv())
   the$closing <- c("("="\\right)", "["="\\right]", "{"="\\right\\}{", "|"="|", "||"="\\|", 
                       "<"="\\rangle", "a"="\\rangle", "c"="\\rceil", "f"="\\rfloor")
   # load distributions
-  data("distributions", envir=the, package="exams.forge.data")
+  data("distributions", envir=the, package="exams.forge")
 #  source(system.file("dist", "craft.R", package="exams.forge"), local=TRUE)
 #  utils::data("distributions", package=pkgname, envir=parent.env(environment()))
   stranslate::loadMsg(system.file("msg", "messages.txt", package="exams.forge"), .domain="exams.forge", .overwrite=TRUE)

@@ -1,37 +1,45 @@
 #' @rdname cor_data
 #' @aliases dcorr
-#' @title Correlation and Data Generation
-#' @description Generates a data set based on `x` and `y` for a given target correlation `r` according to [stats::cor()].
-#' The algorithm modifies the order of the `y`'s, therefore is guaranteed that the (marginal) distribution of `x`
-#' and `y` will not be modified. Please note that it is not guaranteed that the final correlation will be the desired correlation; 
-#' the algorithm interactively modifies the order. If you are unsatisfied with the result, it might help to increase `maxit`.
+#' @title Generate Data with a Target Correlation
+#' @description
+#' Rearranges the order of `y` to construct a dataset with a target correlation `r` between `x` and `y`,
+#' as defined by [stats::cor()].  
+#' The marginal distributions of `x` and `y` are preserved, but the achieved correlation may deviate
+#' from the target. The algorithm iteratively adjusts the ordering of `y`; increasing `maxit`
+#' may improve accuracy if results are unsatisfactory.
 #'
-#' @param x numeric: given `x` values
-#' @param y numeric: given `y` values
-#' @param r numeric: desired correlation
-#' @param method character: indicates which correlation coefficient is to be computed (default: `"pearson")
-#' @param maxit numeric: maximal number of iterations (default: \code{1000})
-#' @param ...  further parameters given to [stats::cor()] 
+#' @param x numeric. Vector of `x` values.
+#' @param y numeric. Vector of `y` values.
+#' @param r numeric. Desired correlation.
+#' @param method character. Correlation coefficient to compute. Options are `"pearson"` (default), 
+#' `"kendall"`, or `"spearman"`.
+#' @param maxit integer. Maximum number of iterations (default: `1000`).
+#' @param ... Additional arguments passed to [stats::cor()].
 #'
-#' @md
-#' @return A matrix with two columns and an attribute `interim` for intermediate values as matrix. 
-#' The rows of the matrix contain:
-#' * if `method=="pearson"`: \eqn{x_i}, \eqn{y_i},  \eqn{x_i-bar{x}}, \eqn{y_i-\bar{y}}, 
-#' \eqn{(x_i-bar{x})^2}, \eqn{(y_i-\bar{y})^2}, and \eqn{(x_i-bar{x})((y_i-\bar{y})}.
-#' * if `method=="kendall"`:
-#'   - \eqn{x_i}: The original x values.
-#'   - \eqn{y_i}: The original y values.
-#'   - \eqn{p_i}: The number of concordant pairs.
-#'   - \eqn{q_i}: The number of discordant pairs.
-#' * if `method=="spearman"`: \eqn{x_i}, \eqn{y_i}, \eqn{p_i} (concordant pairs), and \eqn{q_i} (disconcordant pairs).
-#' In a final step a vector with the row `sums` is appended as further column.
-#' @export
+#' @return 
+#' A two-column matrix with `x` and reordered `y`.  
+#' An attribute `interim` stores a matrix of intermediate values, which depends on `method`:
+#'
+#' * **`pearson`**:  
+#'   Rows include \eqn{x_i}, \eqn{y_i}, \eqn{x_i - \bar{x}}, \eqn{y_i - \bar{y}}, 
+#'   squared deviations, and cross-products.  
+#'
+#' * **`kendall`**:  
+#'   Rows include \eqn{x_i}, \eqn{y_i}, \eqn{p_i} (concordant pairs), and \eqn{q_i} (discordant pairs).  
+#'
+#' * **`spearman`**:  
+#'   Rows include \eqn{x_i}, \eqn{y_i}, ranks of `x` and `y`, and squared rank differences.  
+#'
+#' In all cases, an additional column with row sums is appended.
 #'
 #' @examples
 #' x <- runif(6)
 #' y <- runif(6)
-#' xy <- cor_data(x, y, r=0.6)
+#' xy <- cor_data(x, y, r = 0.6)
 #' cbind(x, y, xy)
+#'
+#' @export
+
 cor_data <- function(x, y, r, method=c("pearson", "kendall", "spearman"), ..., maxit=1000) {
   stopifnot(length(x)==length(y))
   n      <- length(x)

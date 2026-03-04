@@ -5,9 +5,8 @@
 #' Note if `nobs<=10` then the following data sets are available: 
 #' * \code{sos100=sumofsquares(100, 10, zerosum=TRUE, maxt=Inf)}, 
 #' * \code{sos200=sumofsquares(200, 10, zerosum=TRUE, maxt=Inf)}, 
-#' * \code{sos400=sumofsquares(400, 10, zerosum=TRUE, maxt=Inf)}, 
-#' * \code{sos800=sumofsquares(800, 10, zerosum=TRUE, maxt=Inf)}, and 
-#' * \code{sos1000=sumofsquares(100, 10, zerosum=TRUE, maxt=Inf)} 
+#' * \code{sos400=sumofsquares(400, 10, zerosum=TRUE, maxt=Inf)}, and 
+#' * \code{sos800=sumofsquares(800, 10, zerosum=TRUE, maxt=Inf)}
 #' 
 #' @param n2 integer: number to decompose as sum of squares
 #' @param nobs integer: length of return values 

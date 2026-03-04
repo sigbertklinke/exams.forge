@@ -7,7 +7,7 @@
 \alias{dn}
 \alias{dn25}
 \alias{dnsq}
-\title{Number of Observations}
+\title{Generate Sequences of Sample Sizes}
 \usage{
 data_n(max, min = 5)
 
@@ -22,18 +22,20 @@ dn25(max, min = 5)
 dnsq(max, min = 5)
 }
 \arguments{
-\item{max}{integer: maximum sample size}
+\item{max}{Integer. Maximum sample size.}
 
-\item{min}{integer: minimum sample size (default: \code{5})}
+\item{min}{Integer. Minimum sample size (default: \code{5}).}
 }
 \value{
-A sequence of integers.
+An integer vector of sample sizes satisfying the criteria.
 }
 \description{
-Generates a sequence of sample sizes in a range from \code{min=5} to a \code{max}:
+Generate sequences of integers representing sample sizes within a specified range.
+
+Functions support two specialized sequences:
 \itemize{
-\item whose root is an integer (\code{data_nsq}), and
-\item that are divisible only by 2 and 5 (\code{data_n25})
+\item \code{data_nsq} / \code{dnsq}: sample sizes that are perfect squares.
+\item \code{data_n25} / \code{dn25}: sample sizes divisible only by 2 and 5.
 }
 }
 \examples{

@@ -1,0 +1,34 @@
+### `vexpar`
+
+The `vexpar` function extends the capabilities of the `expar` function (from the `exams` package) 
+by introducing recursive expression parsing for multiple inputs. This makes it easy to handle 
+scenarios where you need to process multiple files efficiently, whether they are provided as a vector or a list.
+
+- The function accepts a single file name, a character vector of file names, or a list of file names.
+- It automatically processes each element in a list by recursively calling itself.
+- It efficiently parses all files in a character vector using `sapply`.
+
+```{r vexpar, eval=FALSE}
+# Parse a single file
+singleresult <- vexpar("example_file.Rmd", instruction = NULL)
+print(singleresult)
+
+# Parse multiple files provided as a character vector
+file_vector <- c("example1.Rmd", "example2.Rmd")
+result_vector <- vexpar(file_vector, instruction = NULL)
+print(result_vector)
+
+# Parse files provided as a list
+file_list <- list("example1.Rmd", "example2.Rmd", "example3.Rmd")
+result_list <- vexpar(file_list, instruction = NULL)
+print(result_list)
+```
+
+Let us imagine that we have a set of .Rmd files that need to be parsed for an automated 
+exam generation process. Instead of manually invoking `expar` for each file, 
+we could use `vexpar` to streamline the task:
+
+1. If there are files in a folder, pass their paths as a vector.
+2. If the files are organized hierarchically (e.g., grouped in a list), simply pass the list to `vexpar`.
+
+The output will either be a parsed object for a single file or a list/vector of parsed results for multiple files.

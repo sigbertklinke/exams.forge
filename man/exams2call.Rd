@@ -10,12 +10,14 @@ exams2call(prefix = "exams2")
 \item{prefix}{character: start of the function name (default: \code{"exams2"})}
 }
 \value{
-A list with the function name and its valuated parameters.
+A list with the function name and its evaluated parameters.
 }
 \description{
 Returns a list with the functions' names and parameters called from \code{.traceback()}.
 The function name must start with \code{"exams2"}.
 }
 \examples{
-exams2call()                 # access current call stack
+\donttest{
+   exams2call()                 # access current call stack
+}
 }

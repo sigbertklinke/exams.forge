@@ -1,13 +1,13 @@
 Package: exams.forge
 Type: Package
 Title: Support for Compiling Examination Tasks using the 'exams' Package
-Version: 1.0.11
-Date: 2025-08-03
-Authors@R: person(
-    "Sigbert", "Klinke", 
-    email="sigbert@hu-berlin.de", 
-    role=c("aut", "cre"),
-    comment = c(ORCID = "0000-0003-3337-1863"))
+Version: 1.0.13
+Date: 2026-03-04
+Authors@R: c(
+ person(given="Sigbert", family="Klinke", email="sigbert@hu-berlin.de", 
+  role=c("aut","cre"), comment=c(ORCID="0000-0003-3337-1863")),
+ person(given="Kleio", family="Chrysopoulou Tseva", email="kleio.chrysopoulou.tseva@hu-berlin.de",
+  role="ctb"))
 Description: The main aim is to further facilitate the creation of exercises based on the package 'exams' 
     by Grün, B., and Zeileis, A. (2009) <doi:10.18637/jss.v029.i10>. Creating effective student exercises 
     involves challenges such as creating appropriate data sets and ensuring access to intermediate values 
@@ -24,9 +24,6 @@ Depends:
   polynom
 Imports:
   base64enc,
-  extraDistr,
-  exams,
-  exams.forge.data,
   knitr,
   MASS,
   methods, 
@@ -45,5 +42,7 @@ Imports:
 Encoding: UTF-8
 VignetteBuilder: knitr
 Suggests: 
-    rmarkdown
-RoxygenNote: 7.3.2
+    rmarkdown,
+    exams,
+    hunspell
+RoxygenNote: 7.3.3

@@ -25,7 +25,7 @@
 #' @export
 #'
 #' @examples
-#' data(sos100, package="exams.forge.data")
+#' data(sos100, package="exams.forge")
 #' n   <- sample(5:10, 1)
 #' lm1 <- lm1_data(0.6, nmax=n, xsos=sos100)
 #' str(lm1)

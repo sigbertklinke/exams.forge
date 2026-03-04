@@ -21,7 +21,7 @@
 #' @export
 #'
 #' @examples
-#' data(sos100, package="exams.forge.data")
+#' data(sos100, package="exams.forge")
 #' xy <- pearson_data(0.7, xsos=sos100)
 #' colSums(xy)
 #' colSums(xy^2)

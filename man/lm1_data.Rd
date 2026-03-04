@@ -63,7 +63,7 @@ The data are then rescaled with \eqn{x' = center[1]+scale[1]*x} and
 Finally, a simple linear regression is performed on the transformed data.
 }
 \examples{
-data(sos100, package="exams.forge.data")
+data(sos100, package="exams.forge")
 n   <- sample(5:10, 1)
 lm1 <- lm1_data(0.6, nmax=n, xsos=sos100)
 str(lm1)

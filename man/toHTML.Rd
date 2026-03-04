@@ -5,38 +5,44 @@
 \alias{toLatex}
 \alias{toHTMLorLatex}
 \alias{toLatex.html_matrix}
-\title{HTML and LaTeX Matrix Representations}
+\title{Export Matrices as HTML or LaTeX}
 \usage{
-\method{toHTML}{html_matrix}(x, browser = FALSE, ...)
+\method{toHTML}{html_matrix}(x, browser = FALSE, delay = 2, ...)
 
 \method{toLatex}{html_matrix}(object, ...)
 
 toHTMLorLatex(x, ...)
 }
 \arguments{
-\item{x, object}{html_matrix object}
+\item{x, object}{An object of class \code{html_matrix}.}
 
-\item{browser}{logical: show the HTML in a browser (default: \code{FALSE})}
+\item{browser}{Logical; if \code{TRUE}, the HTML output is opened in a browser (default \code{FALSE}).
+Only used by \code{toHTML}.}
 
-\item{...}{further parameters to \code{\link[utils:browseURL]{utils::browseURL()}}}
+\item{delay}{Numeric; seconds to wait before deleting temporary HTML files. A value of \code{0}
+keeps the file until the R session ends. Only used by \code{toHTML}.}
+
+\item{...}{Additional arguments passed to \code{\link[utils:browseURL]{utils::browseURL()}} (only relevant for \code{toHTML}).}
 }
 \value{
-character
+A character string containing the HTML or LaTeX representation of the matrix.
 }
 \description{
+Convert a matrix to a formatted representation in HTML or LaTeX:
 \itemize{
-\item \code{toHTML} returns an HTML representation of a matrix and, optionally, shows the result in the browser.
-If you decide to view the result in a browser then the HTML will be written to a temporary file and
-\code{\link[utils:browseURL]{utils::browseURL()}} will be called
-\item \code{toLatex} returns a LaTeX representation of a matrix, but supports just a small subset of style options
-\item \code{toHTMLorLatex} returns an HTML or LaTeX representation of a matrix, depending if \code{exams2pdf} is in the call list or not
+\item \code{toHTML}: Returns an HTML table of a matrix. Optionally displays it in a browser
+via a temporary file using \code{\link[utils:browseURL]{utils::browseURL()}}.
+\item \code{toLatex}: Returns a LaTeX table representation. Supports a subset of style options.
+\item \code{toHTMLorLatex}: Chooses HTML or LaTeX output based on the presence of \code{exams2pdf}
+in the call stack.
 }
 }
 \examples{
 library("tools")
-m    <- matrix(1:12, ncol=4)
-hm   <- html_matrix(m)
-if (interactive()) html <- toHTML(hm, browser=TRUE)
+m  <- matrix(1:12, ncol = 4)
+hm <- html_matrix(m)
+# toHTML(hm, browser = TRUE) # opens into browser
 toHTML(hm)
 toLatex(hm)
+toHTMLorLatex(hm)
 }
