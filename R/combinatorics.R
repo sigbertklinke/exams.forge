@@ -63,11 +63,12 @@ combination <- function(n, k, repl=FALSE) { round(exp(if (repl) lchoose(n+k-1, k
 
 #' @rdname Combinatorics
 #' @export
-permutation <- function(n, k=rep(1, n)) { 
-  stopifnot("groups have more than 'n' elements"=sum(k)<=n)
-  if (sum(k)<n) warning("'sum(k)<n', one element group(s) added")
-  round(exp(lfactorial(n)-sum(lfactorial(k)))) 
-} 
+permutation <- function(n, k = rep(1, n)) {
+  s_k <- sum(k)
+  stopifnot("groups have more than 'n' elements" = s_k <= n)
+  if (s_k < n) k <- c(k, rep(1, n-s_k))
+  round(exp(lfactorial(n) - sum(lfactorial(k))))
+}
 
 #' @rdname Combinatorics
 #' @export

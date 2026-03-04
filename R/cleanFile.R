@@ -18,8 +18,9 @@
 #'
 #' # Keep a temporary file until the R session ends
 #' tmp2 <- tempfile()
-#' file.create(tmp2)
-#' cleanFile(tmp2, delay = 0)
+#' if (file.create(tmp2)) {
+#'   cleanFile(tmp2, delay = 0)
+#' }
 cleanFile <- function(file, delay) {
   if (delay > 0) {
     Sys.sleep(delay)

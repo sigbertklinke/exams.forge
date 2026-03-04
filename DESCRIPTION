@@ -44,5 +44,6 @@ VignetteBuilder: knitr
 Suggests: 
     rmarkdown,
     exams,
+    extraDistr,
     hunspell
 RoxygenNote: 7.3.3

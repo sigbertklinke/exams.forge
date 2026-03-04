@@ -63,14 +63,24 @@ pdunif <- function(q, min, max, lower.tail = TRUE, log.p = FALSE) {
 #' @rdname DiscreteUniform
 #' @export
 qdunif <- function(p, min, max, lower.tail = TRUE, log.p = FALSE) {
-  if (log.p) p <- exp(p)
-  if (!lower.tail) p <- 1 - p
-  
-  # Prüfung auf gültige Wahrscheinlichkeiten
-  if (any(p < 0 | p > 1)) stop("p muss zwischen 0 und 1 liegen")
-  
-  # Berechnung der Quantile
-  q <- ceiling(p * (max - min + 1) + min - 1)
+  # 1. Parameter-Checks (Vektorisierung von min/max beachten)
+  if (any(is.na(min)) || any(is.na(max))) return(rep(NaN, length(p)))
+  # 2. Wahrscheinlichkeiten berechnen (Log-Skala berücksichtigen)
+  p_lin <- if (log.p) exp(p) else p
+  if (!lower.tail) p_lin <- 1 - p_lin
+  # 3. Ergebnisvektor mit NaNs initialisieren
+  q <- rep(NaN, max(length(p_lin), length(min), length(max)))
+  # 4. Maske für gültige Eingaben (p im Intervall [0, 1])
+  ok <- !is.na(p_lin) & p_lin >= 0 & p_lin <= 1
+  # 5. Warnung bei ungültigen Werten (wie bei qunif, qnorm etc.)
+  if (any(!ok & !is.na(p_lin))) {
+    warning("NaNs produced")
+  }
+  # 6. Eigentliche Berechnung nur für gültige Indizes
+  q[ok] <- ceiling(p_lin[ok] * (max[ok] - min[ok] + 1) + min[ok] - 1)
+  # 7. Exakte Randwerte (Präzisions-Fix)
+  q[p_lin == 0] <- min[p_lin == 0]
+  q[p_lin == 1] <- max[p_lin == 1]
   return(q)
 }
 
