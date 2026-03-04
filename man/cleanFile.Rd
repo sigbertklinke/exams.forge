@@ -20,14 +20,11 @@ Deletes a file immediately after a specified delay or schedules it for deletion
 when the R session ends.
 }
 \examples{
-# Delete a temporary file after 2 seconds
-tmp <- tempfile()
-file.create(tmp)
-cleanFile(tmp, delay = 2)
-
-# Keep a temporary file until the R session ends
-tmp2 <- tempfile()
-if (file.create(tmp2)) {
-  cleanFile(tmp2, delay = 0)
+{ # Delete a temporary file after 2 seconds
+  tmp <- tempfile()
+  if (file.create(tmp)) cleanFile(tmp, delay = 2)
+  # Keep a temporary file until the R session ends
+  tmp2 <- tempfile()
+  if (file.create(tmp2)) cleanFile(tmp2, delay = 0)
 }
 }
