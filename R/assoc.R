@@ -1,3 +1,4 @@
+#' @name assoc
 #' @title Association and Correlation Measures
 #' @description Compute association and correlation measures for categorical and ordinal data.
 #'

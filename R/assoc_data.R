@@ -11,7 +11,7 @@
 #'
 #' @param tab table A contingency table of absolute frequencies.
 #' @param zero logical Whether zeros are allowed in the resulting table (default: \code{FALSE}).
-#' @param FUN function A function that computes the association or correlation from a frequency table (default: [nom.cc]).
+#' @param FUN function A function that computes the association or correlation from a frequency table (default: `nom.cc`).
 #' @param target numeric Desired association or correlation value (default: \code{NA}, which returns the original table).
 #' @param tol numeric Maximum allowed deviation between the achieved and target association (default: \code{0.001}).
 #' @param maxit integer Maximum number of iterations to reach the target (default: \code{500}).

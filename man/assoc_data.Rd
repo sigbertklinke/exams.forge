@@ -41,7 +41,7 @@ dassoc(
 
 \item{zero}{logical Whether zeros are allowed in the resulting table (default: \code{FALSE}).}
 
-\item{FUN}{function A function that computes the association or correlation from a frequency table (default: \link{nom.cc}).}
+\item{FUN}{function A function that computes the association or correlation from a frequency table (default: \code{nom.cc}).}
 
 \item{target}{numeric Desired association or correlation value (default: \code{NA}, which returns the original table).}
 
