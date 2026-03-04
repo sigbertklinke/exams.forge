@@ -16,15 +16,17 @@
 #'   # Keep a temporary file until the R session ends
 #'   tmp2 <- tempfile(); file.create(tmp2); cleanFile(tmp2, delay = 0)
 #' }
-
 cleanFile <- function(file, delay) {
+  force(file) 
   if (delay > 0) {
     Sys.sleep(delay)
     if (file.exists(file)) unlink(file)
   } else {
-    # Keep file until R session ends
     reg.finalizer(baseenv(), function(e) {
-      if (file.exists(file)) unlink(file)
+      if (!is.null(file) && file.exists(file)) {
+        unlink(file)
+      }
     }, onexit = TRUE)
   }
+  invisible(file)
 }
