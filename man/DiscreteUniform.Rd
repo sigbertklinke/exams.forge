@@ -34,7 +34,7 @@ the length is taken to be the number required.}
 \description{
 Probability mass function, distribution function, quantile function and random generation
 for the discrete uniform distribution. Documentation, examples and interface are taken from
-\code{\link[extraDistr:DiscreteUniform]{extraDistr::DiscreteUniform}}.
+\code{extraDistr::DiscreteUniform}.
 }
 \details{
 If \code{min == max}, then discrete uniform distribution is a degenerate distribution.

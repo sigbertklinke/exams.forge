@@ -2,7 +2,7 @@
 #'
 #' Probability mass function, distribution function, quantile function and random generation
 #' for the discrete uniform distribution. Documentation, examples and interface are taken from 
-#' \code{\link[extraDistr:DiscreteUniform]{extraDistr::DiscreteUniform}}.
+#' \code{extraDistr::DiscreteUniform}.
 #'
 #' @param x,q	            vector of quantiles.
 #' @param p	              vector of probabilities.

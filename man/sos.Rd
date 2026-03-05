@@ -24,7 +24,7 @@ sos400
 
 sos800
 
-sos(n, nmax = 10, quiet = !interactive())
+sos(n, nmax = 10, quiet = !interactive(), download = interactive())
 }
 \arguments{
 \item{n}{Integer, specifying the dataset index (e.g., \code{n = 3} returns \code{sos3}).}
@@ -34,6 +34,9 @@ Defaults to \code{10}.}
 
 \item{quiet}{Logical. If \code{FALSE}, progress messages are printed.
 Defaults to \code{!interactive()}.}
+
+\item{download}{Logical. If \code{TRUE}, the function attempts to download the data
+from the GitHub repository of \code{exams.forge}. Defaults to \code{interactive()}.}
 }
 \value{
 An \R object named \code{sosN}, corresponding to the requested dataset.
@@ -53,7 +56,7 @@ in order:
 \enumerate{
 \item Load from the package \code{exams.forge} if available.
 \item Load from the user data directory (see \code{\link[tools]{R_user_dir}}).
-\item Download from a GitHub repository.
+\item Download from a GitHub repository of \code{exams.forge}.
 \item Compute the dataset on the fly using \code{sumofsquares()}.
 }
 }
@@ -77,9 +80,9 @@ rowSums(sos100, na.rm=TRUE)
 x100 <- sos(100) # part of the package
 rowSums(x100, na.rm=TRUE)     # only zeros
 rowSums(x100^2, na.rm=TRUE)   # only 100's
-x144 <- sos(144) # must be computed 
-rowSums(x144, na.rm=TRUE)     # only zeros
-rowSums(x144^2, na.rm=TRUE)   # only 144's
+x10 <- sos(10)   # must be computed
+rowSums(x10, na.rm=TRUE)     # only zeros
+rowSums(x10^2, na.rm=TRUE)   # only 144's
 
 }
 \seealso{

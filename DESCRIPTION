@@ -24,6 +24,7 @@ Depends:
   polynom
 Imports:
   base64enc,
+  httr,
   knitr,
   MASS,
   methods, 
